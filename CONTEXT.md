@@ -18,17 +18,25 @@ _Avoid_: Style-specific, vibe-specific, sentiment-only
 The team's research sequence: reproduce Venus, test a structured emotion prompt, then train and integrate a lightweight emotion-aware LoRA/QLoRA adapter. These are project phases, not the two training stages defined by the original Venus framework.
 _Avoid_: Venus Stage 1/2, three independent projects
 
+**Project Phase Boundary**:
+Experiments are assigned to a project phase by the intervention being tested, not by execution date: official Venus prompts belong to Phase 1, any explicit emotion prompting of the frozen model belongs to Phase 2, and emotion-specific LoRA/QLoRA adaptation belongs to Phase 3. Work from different phases may overlap in time.
+_Avoid_: Calendar-only phase, labelling experiments by when they ran
+
 **Venus Training Stage**:
 One of the original Venus framework's two stages: aesthetic-guidance capability building or aesthetic-cropping activation. Use this term only for the original Venus training pipeline.
 _Avoid_: Project Phase 1, Project Phase 2, Project Phase 3
 
+**Runtime Reproduction Baseline**:
+The Project Phase 1 reproduction level: run the official released Venus checkpoints without retraining and characterise their existing emotion-aware behaviour under repeatable conditions. It establishes the comparison baseline rather than reproducing the paper's training process or headline results.
+_Avoid_: Training reproduction, full paper reproduction, new emotion-aware method
+
 **Venus Baseline**:
-The reproduced original Venus capability without explicit emotion supervision. It establishes what the existing system can provide before the emotion-aware extension.
-_Avoid_: Emotion-aware model, trained comparison method
+The original released Venus checkpoints evaluated with their official prompts and without explicit emotion prompting or emotion-specific adaptation. It establishes what the existing system can provide before the emotion-aware extension.
+_Avoid_: Emotion-aware model, trained comparison method, retrained Venus
 
 **Emotion Prompt Baseline**:
-The same frozen model guided by a structured prompt to produce emotion recognition, visual evidence, guidance, and cropping outputs without additional model training.
-_Avoid_: Main trained method, neural-network layer
+The same frozen model explicitly asked about image emotion without additional training. A minimal unstructured emotion question is the Phase 2 control, while the structured emotion prompt is the main Phase 2 intervention.
+_Avoid_: Phase 1 official-prompt baseline, trained method, neural-network layer
 
 **Emotion Prompt Layer**:
 The no-training prompting stage in the project workflow. "Layer" describes its role in the comparison pipeline, not a new trainable architectural layer.
@@ -39,10 +47,18 @@ The main trained adaptation method, using emotion-supervised examples to special
 _Avoid_: Prompt-only baseline, full-model retraining, standalone emotion model
 
 **A/B/C Evaluation**:
-The fair comparison of the Venus Baseline, Emotion Prompt Baseline, and Emotion-aware LoRA/QLoRA on the same test images and criteria. It verifies how well the adaptations achieve the Project Aim; it is not the Project Aim itself.
+The fair comparison of A (official-prompt Venus Baseline), B0 (unstructured emotion prompt), B1 (structured emotion prompt), and C (Emotion-aware LoRA/QLoRA) on the same test images and criteria. B0 and B1 are both Phase 2 conditions, so the project still has three phases.
 _Avoid_: Project purpose, three separate final products
 
 ## Supervision and Outputs
+
+**Fixed Emotion Evaluation Set**:
+A held-out set of 20 emotion-labelled images selected once from the official EmoSet test split and reused across A, B0, B1, and C. It covers multiple positive and negative emotions, is scored by one consistent evaluator, and is never used for LoRA/QLoRA training.
+_Avoid_: Training data, twenty images from one emotion, newly hand-labelled dataset
+
+**Emotion-Aware Rubric**:
+The shared 0/1/2 human-scoring scale applied consistently to task-specific emotion recognition, visual grounding, guidance, and cropping dimensions across A, B0, B1, and C. It characterises capability and has no minimum passing score.
+_Avoid_: Paper benchmark metric, model pass/fail threshold, different criteria per configuration
 
 **Emotion Supervision**:
 Training or verified evaluation information that explicitly connects an image with an emotion interpretation and, where available, supporting evidence and guidance.
