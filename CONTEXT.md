@@ -30,6 +30,10 @@ _Avoid_: Project Phase 1, Project Phase 2, Project Phase 3
 The Project Phase 1 reproduction level: run the official released Venus checkpoints without retraining and characterise their existing emotion-aware behaviour under repeatable conditions. It establishes the comparison baseline rather than reproducing the paper's training process or headline results.
 _Avoid_: Training reproduction, full paper reproduction, new emotion-aware method
 
+**Pinned Inference Run**:
+A formal evaluation pass that fixes the exact model snapshots, random seed, generation settings, and environment before execution, then retains one output per image-condition rather than selecting among retries. The Venus Baseline preserves the released BF16 precision even when a larger GPU is required.
+_Avoid_: Floating latest version, best-of-many output, quantised Venus Baseline
+
 **Venus Baseline**:
 The original released Venus checkpoints evaluated with their official prompts and without explicit emotion prompting or emotion-specific adaptation. It establishes what the existing system can provide before the emotion-aware extension.
 _Avoid_: Emotion-aware model, trained comparison method, retrained Venus
@@ -59,6 +63,14 @@ _Avoid_: Training data, twenty images from one emotion, newly hand-labelled data
 **Emotion-Aware Rubric**:
 The shared 0/1/2 human-scoring scale applied consistently to task-specific emotion recognition, visual grounding, guidance, and cropping dimensions across A, B0, B1, and C. It characterises capability and has no minimum passing score.
 _Avoid_: Paper benchmark metric, model pass/fail threshold, different criteria per configuration
+
+**Emotion-Preserving Crop Evaluation**:
+The current Venus Stage 2 evaluation on the Fixed Emotion Evaluation Set: retain both valid and invalid coordinate outputs, render each valid predicted crop beside its original image, and manually score whether the crop preserves or strengthens the labelled emotion. Because EmoSet has no ground-truth crop boxes, this route does not use FLMS IoU, displacement, or recall metrics.
+_Avoid_: Full cropping-benchmark reproduction, silently dropping parse failures, scoring only the coordinate text
+
+**Blind Randomised Evaluation**:
+The human-scoring protocol in which A, B0, B1, and C identities are hidden and their outputs are randomly ordered before the same evaluator applies the shared rubric; condition labels are restored only for analysis. It reduces expectation and order bias but does not provide independent inter-rater agreement.
+_Avoid_: Evaluator sees method names, fixed method order, claiming multi-rater reliability
 
 **Emotion Supervision**:
 Training or verified evaluation information that explicitly connects an image with an emotion interpretation and, where available, supporting evidence and guidance.
