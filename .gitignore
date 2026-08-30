@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Local tooling and secrets
+.codex_work/
+.env
+
+# Model weights and Hugging Face caches must never enter Git
+/models/
+/.huggingface/
+*.safetensors
+pytorch_model*.bin
+training_args.bin
+rng_state*.pth
+
+# EmoSet is non-redistributable project input. Keep it outside the repo.
+/private_data/
+/data/EmoSet*/
+/data/emoset*/
+/data/**/image/
+/data/**/images/
+
+# Rendered evaluation packs contain EmoSet pixels and stay private.
+/artifacts/
+/results/phase1/**/private/
+
+# Common local files
+.DS_Store
+Thumbs.db
