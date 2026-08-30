@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "experiment_id": "phase1_original_venus",
+  "condition": "A",
+  "seed": 1234,
+  "precision": "bf16",
+  "batch_size": 1,
+  "model_loading": {
+    "device_map": "cuda",
+    "trust_remote_code": true,
+    "low_cpu_mem_usage": true,
+    "allow_cpu_offload": false,
+    "allow_quantization": false
+  },
+  "generation": {
+    "chat_format": "chatml",
+    "do_sample": true,
+    "eos_token_id": 151643,
+    "max_new_tokens": 512,
+    "max_window_size": 6144,
+    "pad_token_id": 151643,
+    "top_k": 0,
+    "top_p": 0.3,
+    "transformers_version": "4.32.0"
+  },
+  "models": {
+    "stage1": {
+      "repo_id": "popo28/Venus-Q-Stage1",
+      "revision": "0f5c00c8d07ba889e9c5d12f828129dc322aae6a",
+      "prompt": "Please critically analyze this image from an aesthetic perspective.",
+      "task": "aesthetic_guidance",
+      "weight_format": "safetensors"
+    },
+    "stage2": {
+      "repo_id": "popo28/Venus-Q-Stage2",
+      "revision": "9d274cffcb50de02a82263445cb0f2e3576db743",
+      "prompt": "Please provide the bounding box coordinate of the most visually balanced and aesthetically pleasing composition area.",
+      "task": "aesthetic_cropping",
+      "weight_format": "pytorch_bin"
+    }
+  },
+  "dataset": {
+    "name": "EmoSet-118K",
+    "split": "test",
+    "size": 20,
+    "selection_seed": 1234,
+    "emotion_quotas": {
+      "amusement": 3,
+      "awe": 2,
+      "contentment": 2,
+      "excitement": 3,
+      "anger": 2,
+      "disgust": 2,
+      "fear": 3,
+      "sadness": 3
+    },
+    "valence": {
+      "amusement": "positive",
+      "awe": "positive",
+      "contentment": "positive",
+      "excitement": "positive",
+      "anger": "negative",
+      "disgust": "negative",
+      "fear": "negative",
+      "sadness": "negative"
+    }
+  },
+  "source_commits": {
+    "venus_code": "44e2971b7fe41f88a88c7e0ed8bf4c85eeb0155f",
+    "qwen_vl_finetune": "efa37ba284d56192b246d9b4ed5d3668c1abd163",
+    "emoset_code": "4e3288652a07c7b2334c55d2694f7a1d59692f40"
+  }
+}
