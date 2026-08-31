@@ -4,6 +4,8 @@ This document records the team's agreed research workflow. "Phase 1", "Phase 2",
 
 Project phases are assigned by the intervention being tested, not by execution date. Work from different phases may overlap when model, prompt, and training configurations are clearly labelled and stored separately.
 
+The canonical controls, dataset partitions, scoring rules, and permitted claims are defined in [`Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md`](Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md). That protocol takes precedence if an earlier planning statement conflicts with it.
+
 ## Overall objective
 
 Starting from a reproducible Venus baseline, test whether structured prompting and lightweight parameter adaptation improve image-emotion understanding and whether that understanding improves aesthetic guidance and cropping recommendations.
@@ -25,7 +27,7 @@ Run the officially released Venus checkpoints and record the emotion-related cap
 
 ### Execution route
 
-Use the local-development/cloud-compute route. The local `tlia0262` branch is the sole source of truth for code and documents. A Linux GPU cloud server downloads models, hosts the environment, and runs inference. Results are synchronised back to the local repository; the cloud server is neither long-term storage nor the only copy of project work.
+Use the local-development/cloud-compute route. This team repository is the sole source of truth for code and documents; work is developed on `tlia0262` and merged through a pull request. A Linux GPU cloud server downloads models, hosts the environment, and runs inference. Results are synchronised back to the local repository; the cloud server is neither long-term storage nor the only copy of project work.
 
 Start with a 24GB GPU, sufficient system RAM and disk, BF16, and `batch size = 1`. If the locked formal configuration runs out of memory or cannot complete reliably, do not use CPU offload, quantisation, shorter outputs, or reduced input settings. Move directly to a 48GB GPU and continue with the same configuration.
 
@@ -36,9 +38,9 @@ Start with a 24GB GPU, sufficient system RAM and disk, BF16, and `batch size = 1
 - Retain one formal output per image-condition rather than generating several answers and choosing the best. Report the experiment as one complete fixed-seed run and do not claim that repeated-run stability has been established.
 - Run aesthetic-guidance inference with Venus-Q-Stage1 and aesthetic-cropping inference with Venus-Q-Stage2.
 - Use only official original prompts in Phase 1. Any prompt that explicitly asks about image emotion belongs to Phase 2.
-- Select a fixed set of 20 images from the official EmoSet test split. Cover all eight emotions with an overall balance of 10 positive and 10 negative examples. Review only clear label/data errors; do not create labels from scratch.
-- Use the 20 images to observe emotion recognition, visual evidence, emotion-consistent guidance, and cropping behaviour in Original Venus.
-- For Stage 2, currently run only the 20-image EmoSet route. Retain both successful and failed coordinate parses, render every valid crop, and compare original and cropped images for human emotion-preservation scoring. EmoSet has no ground-truth crop boxes, so this route does not calculate FLMS IoU, displacement, or recall.
+- Preserve the completed fixed 20-image EmoSet run as the unchanged Eval20 pilot. It covers all eight emotions and records released-model A, B0, and Stage 2 outputs.
+- Use Eval20 to document runtime behaviour and motivate the primary experiment; do not overwrite it with Eval80-v1 results or describe it as representative of all EmoSet.
+- For Stage 2, retain both successful and failed coordinate parses, render every valid crop privately, and compare original and cropped images for qualitative emotion-preservation analysis. EmoSet has no ground-truth crop boxes, so this route does not calculate FLMS IoU, displacement, or recall.
 - Defer the proposed five-image FLMS technical smoke test. Complete the EmoSet-20 route first and then decide whether FLMS adds enough value to run.
 - Save the fixed manifest, original prompts, inference settings, model versions, raw outputs, and baseline observations.
 - Do not use 8-bit or 4-bit quantisation for the formal Phase 1 Venus Baseline. Any future quantised experiment must be labelled as a quantised baseline and must not be presented as the official BF16 baseline.
@@ -52,7 +54,7 @@ Start with a 24GB GPU, sufficient system RAM and disk, BF16, and `batch size = 1
 
 ### Completion criteria
 
-Both official Stage 1 and Stage 2 checkpoints load successfully and each processes all 20 fixed images. Stage 2 coordinate parse failures remain in the result rather than being silently removed. Original prompts, raw outputs, runtime configuration, and human scores are saved completely, and no image is replaced because of model performance. Phase 1 measures a baseline and has no minimum emotion-aware passing score.
+Both official Stage 1 and Stage 2 checkpoints load successfully and each processes all 20 fixed images. Stage 2 coordinate parse failures remain in the result rather than being silently removed. Original prompts, raw outputs, and runtime configuration are saved completely, and no image is replaced because of model performance. Phase 1 measures a baseline and has no minimum emotion-aware passing score.
 
 ## Phase 2: structured prompt experiment
 
@@ -74,6 +76,8 @@ The prompt should guide the model to provide, in order:
 - Keep model weights frozen.
 - Apart from the prompt, keep inputs, inference settings, and evaluation conditions as close to Phase 1 as possible.
 - Label the simple unstructured emotion question B0 and the structured emotion prompt B1. Both belong to Phase 2.
+- Freeze and approve Eval80-v1 before new inference, then run A, B0, and B1 once on the same 80 images. A remains qualitative unless explicitly constrained to emit an eight-class label.
+- Use exact-match emotion accuracy and the shared five-dimension guidance rubric defined in the canonical protocol.
 - Evaluate emotion recognition, whether evidence is grounded in the image, and whether advice is genuinely influenced by the emotion interpretation.
 
 ### Deliverables
@@ -98,18 +102,19 @@ The project's "small model" or "patch" is canonically an Emotion-aware LoRA/QLoR
 
 - Audit public datasets for task definition, annotation quality, licence, and available fields.
 - Convert source data into emotion-supervision examples compatible with Venus input and output formats.
-- If required, create a small human-verified Bridge Set linking emotion labels to visual evidence, aesthetic guidance, and crop recommendations.
+- Build BridgeTrain-v1 from 400 class-balanced EmoSet images after excluding every Eval20 and Eval80-v1 ID. All 400 images receive classification records, and a balanced 80-image subset receives human-audited joint-guidance records.
+- Keep an independent balanced validation set for adapter selection. Eval80-v1 must never be used for hyperparameter, epoch, prompt, or dataset-size decisions.
 - Create leakage-free training, validation, and test splits.
 - Train and select a LoRA/QLoRA adapter while recording hyperparameters, base model, and checkpoints.
 - Load or merge the adapter into the Venus inference workflow as appropriate.
-- Complete A/B/C comparisons and ablation analysis under unified test conditions.
+- Complete A/B0/B1/C comparisons and ablation analysis under unified test conditions.
 
 ### Deliverables
 
 - Data conversion and quality-checking workflow.
 - Emotion-aware LoRA/QLoRA adapter weights.
 - Integrated Venus inference configuration.
-- A/B/C evaluation, ablations, and failure-case analysis.
+- A/B0/B1/C evaluation, ablations, and failure-case analysis.
 
 ### Completion criteria
 
@@ -128,25 +133,19 @@ All three phases share the following evaluation directions:
 - Stability: whether performance remains reliable across samples, prompt perturbations, and repeated runs when those are evaluated.
 - Cost: inference expense, training resources, adapter size, and integration complexity.
 
-### Unified human-scoring rubric
+### Unified 0–10 scoring protocol
 
-Every applicable dimension uses the same `0/1/2` scale:
+Emotion Recognition Score is exact-match eight-class accuracy expressed on a 0–10 scale: `10 × correct / total`. Reports also retain the raw fraction, per-class accuracy, and confusion matrix. A is not assigned this score unless it is explicitly required to emit one of the eight labels.
 
-- `0`: absent, clearly wrong, or contradicts the image;
-- `1`: partial, generic, incomplete, or supported by weak visual evidence;
-- `2`: explicit, correct, and supported by concrete, truthful visual evidence.
+Emotion-Aware Guidance Score is the sum of five dimensions, each scored `0`, `1`, or `2`, producing a direct 0–10 total:
 
-Venus-Q-Stage1 has three dimensions per image, with a maximum of 6:
+1. visual grounding;
+2. emotion-aesthetic linkage;
+3. aesthetic validity;
+4. actionability; and
+5. emotion preservation.
 
-1. spontaneous recognition or correct use of image emotion;
-2. use of truthful visual evidence;
-3. aesthetic guidance that considers and preserves image emotion.
-
-Venus-Q-Stage2 has three dimensions per image, with a maximum of 6:
-
-1. spontaneous recognition or correct use of image emotion;
-2. crop rationale supported by truthful visual evidence;
-3. a crop result that preserves or strengthens image emotion.
+One evaluator applies the same rubric under blind randomisation. This supports paired within-project comparison but does not establish inter-rater reliability.
 
 ## Data and version control
 
