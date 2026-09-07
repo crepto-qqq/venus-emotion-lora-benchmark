@@ -13,11 +13,11 @@ Starting from a reproducible Venus baseline, test whether structured prompting a
 The core comparison is fixed as:
 
 - A: official checkpoint with the official original prompt;
-- B0: frozen Venus with a simple unstructured emotion question, used as the Phase 2 control;
-- B1: frozen Venus with the structured emotion prompt, used as the main Phase 2 intervention;
+- B0: frozen Venus with a concise unstructured joint emotion-recognition and aesthetic-guidance prompt, used as the Phase 2 control;
+- B1: frozen Venus with the structured version of the same joint task, used as the main Phase 2 intervention;
 - C: Venus baseline with an emotion-aware LoRA/QLoRA adapter.
 
-All configurations should use the same test images, output format, inference settings, and evaluation criteria wherever possible so that changes can be attributed to the corresponding intervention.
+All configurations use the same test images and pinned inference settings. A preserves the official response behaviour, B0 remains free-form, and B1/C share the same structured response schema. All four receive the same guidance rubric, while exact-match recognition applies only where an eight-class label is requested.
 
 ## Phase 1: reproduce Venus at runtime
 
@@ -60,7 +60,7 @@ Both official Stage 1 and Stage 2 checkpoints load successfully and each process
 
 ### Objective
 
-Without training or modifying model weights, first measure Venus's basic emotion capability when asked a simple unstructured emotion question, then test whether a structured emotion prompt provides additional improvement.
+Without training or modifying model weights, first measure Venus on a concise unstructured joint emotion-recognition and aesthetic-guidance task, then test whether explicit grounding rules and a structured response schema provide additional improvement.
 
 ### Structured output direction
 
@@ -75,9 +75,10 @@ The prompt should guide the model to provide, in order:
 
 - Keep model weights frozen.
 - Apart from the prompt, keep inputs, inference settings, and evaluation conditions as close to Phase 1 as possible.
-- Label the simple unstructured emotion question B0 and the structured emotion prompt B1. Both belong to Phase 2.
-- Freeze and approve Eval80-v1 before new inference, then run A, B0, and B1 once on the same 80 images. A remains qualitative unless explicitly constrained to emit an eight-class label.
-- Use exact-match emotion accuracy and the shared five-dimension guidance rubric defined in the canonical protocol.
+- Label the concise unstructured joint prompt B0 and the structured joint prompt B1. Both belong to Phase 2.
+- Complete blind and reveal review, freeze prompts, settings, scoring handbook, and integrity hashes, and obtain team approval before new Eval80 inference.
+- Run A first on all 80 images and continue only after technical acceptance. Run B0 and B1 later without using A performance to revise the frozen experiment.
+- Use exact-match emotion accuracy for B0, B1, and C and the shared five-dimension guidance rubric for A, B0, B1, and C. Keep the two 0–10 scores separate.
 - Evaluate emotion recognition, whether evidence is grounded in the image, and whether advice is genuinely influenced by the emotion interpretation.
 
 ### Deliverables
@@ -124,8 +125,8 @@ The experiment can answer whether lightweight adaptation produces repeatable gai
 
 All three phases share the following evaluation directions:
 
-- Evaluator consistency: one evaluator applies the fixed scoring sheet to all A, B0, B1, and C outputs.
-- Blind randomisation: hide A/B0/B1/C identities and randomise output order before scoring, then restore the mapping for analysis to reduce expectation and order bias.
+- Reviewer consistency: the six reviewers approve one shared handbook before it is frozen, then each applies it to a fixed image partition that remains unchanged across A, B0, B1, and C.
+- Blind randomisation: hide A/B0/B1/C identities and prompts, randomise condition order per image, and assign all four responses for an image to the same reviewer.
 - Emotion recognition: whether the emotion judgement is correct, sufficiently specific, and appropriately calibrated.
 - Visual grounding: whether the emotion explanation is supported by genuinely visible evidence.
 - Guidance quality: whether advice is specific, actionable, and consistent with the recognised emotion.
@@ -135,7 +136,7 @@ All three phases share the following evaluation directions:
 
 ### Unified 0–10 scoring protocol
 
-Emotion Recognition Score is exact-match eight-class accuracy expressed on a 0–10 scale: `10 × correct / total`. Reports also retain the raw fraction, per-class accuracy, and confusion matrix. A is not assigned this score unless it is explicitly required to emit one of the eight labels.
+Emotion Recognition Score is exact-match eight-class accuracy expressed on a 0–10 scale: `10 × correct / total`. Reports also retain the raw fraction, per-class accuracy, and confusion matrix. It applies to B0, B1, and C; A is not assigned this score because its official prompt is unchanged.
 
 Emotion-Aware Guidance Score is the sum of five dimensions, each scored `0`, `1`, or `2`, producing a direct 0–10 total:
 
@@ -145,7 +146,7 @@ Emotion-Aware Guidance Score is the sum of five dimensions, each scored `0`, `1`
 4. actionability; and
 5. emotion preservation.
 
-One evaluator applies the same rubric under blind randomisation. This supports paired within-project comparison but does not establish inter-rater reliability.
+All 80 images receive the guidance rubric under blind randomisation for A, B0, B1, and C. Six reviewers receive fixed, non-overlapping image partitions of 14/14/13/13/13/13 and score all four anonymous condition responses for every assigned image. A wrong emotion label does not automatically zero the guidance dimensions, and the recognition and guidance scores are never averaged together. Because no item is double-scored, the report must not claim conventional inter-rater reliability.
 
 ## Data and version control
 

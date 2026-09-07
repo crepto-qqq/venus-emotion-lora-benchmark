@@ -39,15 +39,15 @@ The original released Venus checkpoints evaluated with their official prompts an
 _Avoid_: Emotion-aware model, trained comparison method, retrained Venus
 
 **Emotion Prompt Baseline**:
-The same frozen model explicitly asked about image emotion without additional training. A minimal unstructured emotion question is the Phase 2 control, while the structured emotion prompt is the main Phase 2 intervention.
+The same frozen model asked to identify image emotion and provide emotion-aware aesthetic guidance without additional training. A concise unstructured joint prompt is the Phase 2 control, while the structured emotion prompt is the main Phase 2 intervention.
 _Avoid_: Phase 1 official-prompt baseline, trained method, neural-network layer
 
-**B0 Plain Emotion Baseline**:
-The frozen released Venus Stage 1 model asked a plain eight-class emotion-recognition question. It measures direct recognition without structured reasoning instructions.
-_Avoid_: Original aesthetic prompt, structured prompt condition
+**B0 Unstructured Joint Baseline**:
+The frozen released Venus Stage 1 model asked one concise, free-form question covering an eight-class emotion choice, visible evidence, the emotion-aesthetic relationship, and practical emotion-preserving guidance. It measures recognition and guidance without the fixed sections or detailed constraints used by B1.
+_Avoid_: Classification-only prompt, original aesthetic prompt, structured prompt condition
 
 **B1 Structured Emotion Baseline**:
-The same frozen released Venus Stage 1 model given the structured emotion-aware system prompt while keeping the user task, output constraints, images, and generation settings fixed.
+The same frozen released Venus Stage 1 model given a structured emotion-aware prompt for the same joint recognition-and-guidance task, with explicit grounding rules and a fixed response schema. B0 and B1 use the same images and generation settings, while the additional structure and constraints are the B1 intervention.
 _Avoid_: Trained adapter, changed model weights
 
 **Emotion Prompt Layer**:
@@ -59,7 +59,7 @@ The main trained adaptation method, using emotion-supervised examples to special
 _Avoid_: Prompt-only baseline, full-model retraining, standalone emotion model
 
 **A/B0/B1/C Evaluation**:
-The fair comparison of A (official-prompt Venus Baseline), B0 (plain emotion recognition), B1 (structured emotion prompting), and C (the joint emotion-aware LoRA using exactly the B1 prompt and settings). B0 versus B1 isolates the prompt effect; B1 versus C isolates the adapter effect. B0 and B1 are both Phase 2 conditions, so the project still has three phases.
+The fair comparison of A (official-prompt Venus Baseline), B0 (unstructured joint prompting), B1 (structured joint prompting), and C (the joint emotion-aware LoRA using exactly the B1 prompt and settings). B0 versus B1 isolates the structured-prompt effect; B1 versus C isolates the adapter effect. B0 and B1 are both Phase 2 conditions, so the project still has three phases.
 _Avoid_: Project purpose, unrelated prompts or evaluation sets for each condition
 
 ## Supervision and Outputs
@@ -69,11 +69,21 @@ The original fixed 20-image EmoSet evaluation and its completed A, B0, and Stage
 _Avoid_: Primary evaluation, LoRA training data, retroactively rescored result
 
 **Eval80-v1**:
-The primary exploratory evaluation set: 80 EmoSet images balanced at 10 per emotion class. It is reviewed and frozen before new inference, reused for B0, B1, and C, and permanently excluded from all training and validation data together with Eval20.
+The primary exploratory evaluation set: 80 EmoSet images balanced at 10 per emotion class. It is blind-reviewed, approved, and frozen before new inference, reused for A, B0, B1, and C, and permanently excluded from all training and validation data together with Eval20.
+
+Current review state (2026-09-07): blind and reveal review are complete and validated at 80/80. The reveal review contains 73 `clear`, 5 `ambiguous`, and 2 `possible_mismatch` records. All 80 records remain in the primary evaluation; the seven flagged records define a predeclared sensitivity subset. The six-member team approved and froze the human scoring handbook after completing the structured boundary interview, and the local evaluation package is frozen. Formal Eval80 inference has not started.
 _Avoid_: Representative sample of all EmoSet, training data, repeatedly revised test set
 
+**Dataset Blind Review**:
+The pre-inference quality audit in which a designated human reviewer assigns an independent emotion and confidence without seeing the EmoSet label, then records agreement and ambiguity after the label is revealed. It characterises label clarity without changing the fixed ground truth.
+_Avoid_: Model evaluation, ground-truth relabelling, post-output sample selection
+
+**Frozen Evaluation Package**:
+The approved Eval80-v1 membership, review records, prompts, scoring handbook, model and generation settings, and integrity hashes fixed before formal inference. Later results may trigger technical validation or honest reporting, but must not change the package.
+_Avoid_: Editable test plan, prompt-tuning set, best-result configuration
+
 **Emotion-Aware Rubric**:
-The shared scoring protocol uses exact-match emotion accuracy expressed on a 0–10 scale and five guidance dimensions scored 0/1/2 whose sum is directly reported on a 0–10 scale. The guidance dimensions are visual grounding, emotion-aesthetic linkage, aesthetic validity, actionability, and emotion preservation.
+The shared scoring protocol reports two separate results: exact-match emotion accuracy expressed on a 0–10 scale for B0, B1, and C, and five guidance dimensions scored 0/1/2 whose sum is directly reported on a 0–10 scale for A, B0, B1, and C. The guidance dimensions are visual grounding, emotion-aesthetic linkage, aesthetic validity, actionability, and emotion preservation; the two scores are never combined.
 _Avoid_: A subjective single overall mark, paper benchmark metric, different criteria per condition
 
 **Emotion-Preserving Crop Evaluation**:
@@ -81,8 +91,12 @@ The current Venus Stage 2 evaluation on the Fixed Emotion Evaluation Set: retain
 _Avoid_: Full cropping-benchmark reproduction, silently dropping parse failures, scoring only the coordinate text
 
 **Blind Randomised Evaluation**:
-The human-scoring protocol in which A, B0, B1, and C identities are hidden and their outputs are randomly ordered before the same evaluator applies the shared rubric; condition labels are restored only for analysis. It reduces expectation and order bias but does not provide independent inter-rater agreement.
-_Avoid_: Evaluator sees method names, fixed method order, claiming multi-rater reliability
+The human-scoring protocol in which A, B0, B1, and C identities are hidden and their outputs are randomly ordered before six designated reviewers apply the shared rubric to fixed, non-overlapping image partitions. Each image stays with the same reviewer across all four conditions, preserving within-reviewer condition comparison without claiming overlapping-score inter-rater reliability.
+_Avoid_: Evaluator sees method names, fixed method order, one evaluator for all 320 responses, changing reviewers between conditions
+
+**Fixed Cross-Condition Reviewer Partition**:
+The Eval80 assignment that divides images across six reviewers as 14/14/13/13/13/13 and assigns all four anonymous condition responses for an image to its one reviewer. It balances workload as closely as 80 images permit while preventing condition from being confounded with a reviewer change for the same image.
+_Avoid_: Separate reviewer pool per condition, one reviewer for all images, overlapping double-scoring design
 
 **Emotion Supervision**:
 Training or verified evaluation information that explicitly connects an image with an emotion interpretation and, where available, supporting evidence and guidance.
