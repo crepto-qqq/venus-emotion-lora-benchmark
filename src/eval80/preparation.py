@@ -24,19 +24,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from PIL import Image, ImageDraw, ImageFont
+from .core import EMOTION_CLASSES, sha256_file
 
 
-EMOTION_CLASSES = (
-    "amusement",
-    "anger",
-    "awe",
-    "contentment",
-    "disgust",
-    "excitement",
-    "fear",
-    "sadness",
-)
 SELECTIONS_PER_CLASS = 10
 BLIND_ORDER_NAMESPACE = "venus-emoset-eval80-v1-blind-order"
 
@@ -49,7 +39,7 @@ class SelectedEntry:
     annotation_entry: str
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Prepare a local-only, human-reviewable EmoSet Eval80-v1 package."
     )
@@ -60,19 +50,11 @@ def parse_args() -> argparse.Namespace:
         required=True,
         help="New output directory outside the Git repository",
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def sha256_bytes(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
-
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as source:
-        for chunk in iter(lambda: source.read(8 * 1024 * 1024), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
 
 
 def stable_blind_key(image_entry: str) -> str:
@@ -188,6 +170,8 @@ def draw_contact_sheet(
     output_path: Path,
     labeled: bool,
 ) -> None:
+    from PIL import Image, ImageDraw, ImageFont
+
     columns = 5
     image_height = 220
     cell_width = 320
@@ -433,8 +417,8 @@ def prepare(archive_path: Path, output_root: Path) -> dict[str, Any]:
     return summary
 
 
-def main() -> int:
-    args = parse_args()
+def prepare_command(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
     try:
         summary = prepare(args.archive, args.output_root)
     except Exception as error:
@@ -446,4 +430,4 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    raise SystemExit(prepare_command())
