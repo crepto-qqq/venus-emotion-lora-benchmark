@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "protocol_version": "eval80-v1-2026-09-07",
+  "freeze_record_required": true,
+  "seed": 1234,
+  "precision": "bf16",
+  "batch_size": 1,
+  "model_loading": {
+    "device_map": "cuda",
+    "trust_remote_code": true,
+    "low_cpu_mem_usage": true,
+    "allow_cpu_offload": false,
+    "allow_quantization": false
+  },
+  "generation": {
+    "chat_format": "chatml",
+    "do_sample": true,
+    "eos_token_id": 151643,
+    "max_new_tokens": 512,
+    "max_window_size": 6144,
+    "pad_token_id": 151643,
+    "top_k": 0,
+    "top_p": 0.3,
+    "transformers_version": "4.32.0"
+  },
+  "model": {
+    "repo_id": "popo28/Venus-Q-Stage1",
+    "revision": "0f5c00c8d07ba889e9c5d12f828129dc322aae6a",
+    "weight_format": "safetensors"
+  },
+  "conditions": {
+    "A": {
+      "name": "official_original_aesthetic",
+      "prompt_version": "venus-official-stage1",
+      "prompt": "Please critically analyze this image from an aesthetic perspective.",
+      "response_format": "official_free_form",
+      "recognition_score": false,
+      "guidance_score": true
+    },
+    "B0": {
+      "name": "unstructured_joint_baseline",
+      "prompt_version": "b0-unstructured-joint-v1",
+      "prompt": "Identify the primary emotion conveyed by this image from the following categories: amusement, anger, awe, contentment, disgust, excitement, fear, or sadness. Briefly explain which visible elements create that emotion, how the image's aesthetics support or weaken it, and provide practical aesthetic guidance that would preserve or strengthen the emotion.",
+      "response_format": "free_form",
+      "recognition_score": true,
+      "guidance_score": true
+    },
+    "B1": {
+      "name": "structured_joint_baseline",
+      "prompt_version": "b1-structured-joint-v1",
+      "prompt": "You are an emotion-aware image-aesthetics assistant.\n\nUse only visible evidence from the image. Choose exactly one primary emotion from: amusement, anger, awe, contentment, disgust, excitement, fear, or sadness.\n\nExplain how visible elements support the emotion, how composition, colour, lighting, subject placement, or visual hierarchy support or weaken it, and provide concrete aesthetic guidance that preserves or strengthens it. Do not invent objects or unsupported details.\n\nUse exactly this format:\n\nEmotion: <one allowed label>\n\nVisual evidence:\n- <specific visible cue>\n- <specific visible cue>\n\nAesthetic relationship:\n<clear explanation>\n\nGuidance:\n- <concrete action>\n- <concrete action>\n\nFinal emotion: <the same allowed label>",
+      "response_format": "structured_joint_v1",
+      "recognition_score": true,
+      "guidance_score": true
+    },
+    "C": {
+      "name": "joint_lora",
+      "prompt_version": "b1-structured-joint-v1",
+      "prompt_source_condition": "B1",
+      "response_format": "structured_joint_v1",
+      "recognition_score": true,
+      "guidance_score": true
+    }
+  },
+  "dataset": {
+    "name": "EmoSet-118K",
+    "evaluation_set": "Eval80-v1",
+    "size": 80,
+    "emotion_classes": [
+      "amusement",
+      "anger",
+      "awe",
+      "contentment",
+      "disgust",
+      "excitement",
+      "fear",
+      "sadness"
+    ],
+    "images_per_class": 10,
+    "require_blind_review": true,
+    "require_reveal_review": true,
+    "require_team_approval": true
+  },
+  "evaluation": {
+    "reviewer_count": 1,
+    "designated_evaluator": true,
+    "guidance_dimensions": [
+      "visual_grounding_0_2",
+      "emotion_aesthetic_linkage_0_2",
+      "aesthetic_validity_0_2",
+      "actionability_0_2",
+      "emotion_preservation_0_2"
+    ],
+    "guidance_total_max": 10,
+    "inter_rater_reliability_claim": false
+  },
+  "evidence": {
+    "progress_milestones": [1, 20, 40, 60, 80],
+    "private_directory_name": "evidence/screenshots",
+    "commit_to_git": false
+  },
+  "source_commits": {
+    "venus_code": "44e2971b7fe41f88a88c7e0ed8bf4c85eeb0155f",
+    "qwen_vl_finetune": "efa37ba284d56192b246d9b4ed5d3668c1abd163",
+    "emoset_code": "4e3288652a07c7b2334c55d2694f7a1d59692f40"
+  }
+}
