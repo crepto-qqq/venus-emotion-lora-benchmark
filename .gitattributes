@@ -1,0 +1,4 @@
+# Preserve the original bytes of committed Phase 2 result artifacts.
+/results/phase2/**/*.json -text
+/results/phase2/**/*.jsonl -text
+/results/phase2/eval80/frozen_inputs/inference_manifest.json whitespace=cr-at-eol
