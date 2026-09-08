@@ -30,3 +30,9 @@ rng_state*.pth
 # Common local files
 .DS_Store
 Thumbs.db
+
+# Local EmoSet / annotation artifacts
+data/EmoSet-118K.zip
+data/datasets/raw/
+data/datasets/anger_old_before_manual_review/
+.codex_work/
