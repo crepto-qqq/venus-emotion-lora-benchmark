@@ -1,0 +1,6 @@
+# Compatibility constraints for the legacy Qwen/Venus stack on RunPod.
+# Keep these separate from the complete resolved pip freeze produced by
+# bootstrap.sh after the real cloud install succeeds.
+pydantic<2
+protobuf<5
+setuptools<70
