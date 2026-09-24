@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.example/phase3/smoke-report.schema.json",
+  "title": "Phase 3 real-model backward smoke report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "generated_at_utc", "member_id", "technical_infrastructure_only", "passed", "forward_passed", "backward_passed", "optimizer_step_performed", "adapter_saved", "model", "fixture", "batch", "lora", "memory", "versions", "errors"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "phase3_smoke_backward"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "member_id": {"type": "string", "minLength": 1},
+    "technical_infrastructure_only": {"const": true},
+    "passed": {"type": "boolean"},
+    "forward_passed": {"type": "boolean"},
+    "backward_passed": {"type": "boolean"},
+    "optimizer_step_performed": {"const": false},
+    "adapter_saved": {"const": false},
+    "model": {
+      "type": "object",
+      "required": ["repository", "revision", "dtype", "device"],
+      "properties": {
+        "repository": {"type": "string"}, "revision": {"type": "string"},
+        "dtype": {"const": "bfloat16"}, "device": {"type": "string"}
+      }, "additionalProperties": false
+    },
+    "fixture": {
+      "type": "object",
+      "required": ["id", "fixture_sha256", "image_sha256", "dataset_record_sha256"],
+      "properties": {
+        "id": {"const": "contentment_05000"},
+        "fixture_sha256": {"type": ["string", "null"]},
+        "image_sha256": {"type": ["string", "null"]},
+        "dataset_record_sha256": {"type": ["string", "null"]}
+      },
+      "additionalProperties": false
+    },
+    "batch": {
+      "type": "object",
+      "required": ["batch_size", "token_count", "supervised_token_count", "image_token_count", "loss"],
+      "properties": {
+        "batch_size": {"const": 1}, "token_count": {"type": "integer", "minimum": 0},
+        "supervised_token_count": {"type": "integer", "minimum": 0},
+        "image_token_count": {"type": "integer", "minimum": 0},
+        "loss": {"type": ["number", "null"]}
+      }, "additionalProperties": false
+    },
+    "lora": {
+      "type": "object",
+      "required": ["rank", "alpha", "target_modules", "matched_target_names", "total_parameter_count", "trainable_parameter_count", "trainable_parameter_names", "nonzero_gradient_parameter_names"],
+      "properties": {
+        "rank": {"type": "integer", "minimum": 1}, "alpha": {"type": "integer", "minimum": 1},
+        "target_modules": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+        "matched_target_names": {"type": "array", "items": {"type": "string"}},
+        "total_parameter_count": {"type": "integer", "minimum": 0},
+        "trainable_parameter_count": {"type": "integer", "minimum": 0},
+        "trainable_parameter_names": {"type": "array", "items": {"type": "string"}},
+        "nonzero_gradient_parameter_names": {"type": "array", "items": {"type": "string"}}
+      }, "additionalProperties": false
+    },
+    "memory": {
+      "type": "object", "required": ["peak_allocated_bytes", "peak_reserved_bytes"],
+      "properties": {"peak_allocated_bytes": {"type": "integer", "minimum": 0}, "peak_reserved_bytes": {"type": "integer", "minimum": 0}},
+      "additionalProperties": false
+    },
+    "versions": {"type": "object", "additionalProperties": {"type": "string"}},
+    "errors": {"type": "array", "items": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"passed": {"const": true}}, "required": ["passed"]},
+      "then": {
+        "properties": {
+          "forward_passed": {"const": true},
+          "backward_passed": {"const": true},
+          "fixture": {
+            "properties": {
+              "fixture_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "image_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "dataset_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+            }
+          },
+          "batch": {
+            "properties": {
+              "token_count": {"minimum": 1},
+              "supervised_token_count": {"minimum": 1},
+              "image_token_count": {"minimum": 258},
+              "loss": {"type": "number"}
+            }
+          },
+          "lora": {
+            "properties": {
+              "matched_target_names": {"minItems": 1},
+              "total_parameter_count": {"minimum": 1},
+              "trainable_parameter_count": {"minimum": 1},
+              "trainable_parameter_names": {"minItems": 1},
+              "nonzero_gradient_parameter_names": {"minItems": 1}
+            }
+          },
+          "errors": {"maxItems": 0}
+        }
+      },
+      "else": {"properties": {"errors": {"minItems": 1}}}
+    }
+  ]
+}
