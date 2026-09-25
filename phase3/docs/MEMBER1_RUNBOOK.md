@@ -21,9 +21,10 @@ stay under `phase3/`.
 Use the target setup in [`RUNPOD_TEAM_SETUP.md`](RUNPOD_TEAM_SETUP.md): a
 normal RunPod Team, one on-demand Secure Cloud Pod with at least 48 GB GPU
 memory, and one 120 GB Standard Network Volume mounted at `/workspace`. That
-target is still pending as of 2026-09-25. The account is personal and has no
-Pod or Network Volume. Every compatible 48 GB-or-larger candidate checked on
-the deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
+target is partially ready as of 2026-09-25: the Team exists, Member 1 is its
+Admin, and Member 1 is currently its only member. There is no Phase 3 Pod or
+Network Volume. Every compatible 48 GB-or-larger candidate checked on the
+deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
 `Out of capacity`. The A100 PCIe listing showed a USD 1.59/hour baseline.
 Recheck capacity and price before any paid action. Do not run acceptance until
 the exact model snapshot and fixture image have been prepared and verified on
@@ -65,14 +66,15 @@ paths.
 
 ## Step 1: provision the shared runtime
 
-After the required RunPod account and billing actions are explicitly approved:
+After the remaining RunPod resource and billing actions are explicitly approved:
 
 1. Recheck the deployment page for a compatible GPU with actual capacity. The
    smoke requires at least 44 GiB total GPU memory and 40 GiB free immediately
    before model load; a 48 GB-or-larger GPU is the practical minimum.
 2. Record the exact region, GPU type, displayed hourly price, volume price, and
    intended maximum runtime for review.
-3. Convert the personal account to a normal Team, with Member 1 as Admin.
+3. Confirm the existing Team still lists Member 1 as Admin. This was complete
+   on 2026-09-25; do not create another Team.
 4. Create one 120 GB Standard Network Volume in that same Secure Cloud region.
 5. Deploy one Pod with the volume mounted at `/workspace`. Do not create a Pod
    or volume per member.

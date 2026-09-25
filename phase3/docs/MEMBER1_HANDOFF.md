@@ -45,8 +45,9 @@ shared read-only inputs.
 
 The checked-in scripts, pins, schemas, and documentation are repository-side
 preparation. They are not evidence that RunPod provisioning or GPU acceptance
-has happened. As of 2026-09-25, the observed account is personal and has no Pod
-or Network Volume. The Team, 120 GB Network Volume, new shared Pod, invitations,
+has happened. As of 2026-09-25, the RunPod Team exists, Member 1 is its Admin,
+and Member 1 is currently its only member. There is no Phase 3 Pod or Network
+Volume. The 120 GB Network Volume, new shared Pod, invitations for Members 2-6,
 and real GPU reports remain runtime actions. Every compatible 48 GB-or-larger
 candidate checked on the deployment page -- L40S, A40, RTX A6000, and A100
 PCIe 80 GB -- reported `Out of capacity`. The A100 PCIe listing showed a
