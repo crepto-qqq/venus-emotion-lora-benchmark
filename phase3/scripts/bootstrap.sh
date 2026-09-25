@@ -9,6 +9,7 @@ PROJECT_ROOT="${PROJECT_ROOT_DEFAULT}"
 RUNTIME_ROOT="/workspace/phase3"
 MODEL_PATH="/workspace/models/Venus-Q-Stage1"
 MEMBER_ID="member1"
+DOWNLOAD_MODEL_IF_MISSING=0
 
 usage() {
   cat <<'EOF'
@@ -19,6 +20,8 @@ Options:
   --project-root PATH   Project checkout (default: detected repository root)
   --workspace-root PATH Shared runtime root (default: /workspace/phase3)
   --model-path PATH     Existing Stage 1 model snapshot
+  --download-model-if-missing
+                        Download missing files from the pinned model revision
   -h, --help            Show this help
 EOF
 }
@@ -34,6 +37,7 @@ while (($#)); do
     --project-root) (($# >= 2)) || die "--project-root requires a value"; PROJECT_ROOT="$2"; shift 2 ;;
     --workspace-root) (($# >= 2)) || die "--workspace-root requires a value"; RUNTIME_ROOT="$2"; shift 2 ;;
     --model-path) (($# >= 2)) || die "--model-path requires a value"; MODEL_PATH="$2"; shift 2 ;;
+    --download-model-if-missing) DOWNLOAD_MODEL_IF_MISSING=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
   esac
@@ -92,6 +96,18 @@ bash "${PROJECT_ROOT}/phase3/environment/create_env.sh" \
 bash "${PROJECT_ROOT}/phase3/scripts/fetch_upstream.sh" \
   --runtime-root "${RUNTIME_ROOT}"
 
+model_prepare_args=(
+  --project-root "${PROJECT_ROOT}"
+  --model-path "${MODEL_PATH}"
+  --cache-dir "${CACHE_DIR}/huggingface"
+  --output "${BOOTSTRAP_REPORT_DIR}/model-snapshot.json"
+)
+if ((DOWNLOAD_MODEL_IF_MISSING)); then
+  model_prepare_args+=(--download-if-missing)
+fi
+"${ENV_DIR}/bin/python" "${PROJECT_ROOT}/phase3/tools/prepare_model_snapshot.py" \
+  "${model_prepare_args[@]}"
+
 "${ENV_DIR}/bin/python" "${PROJECT_ROOT}/phase3/tools/preflight.py" \
   --mode static \
   --project-root "${PROJECT_ROOT}" \
@@ -105,7 +121,8 @@ bash "${PROJECT_ROOT}/phase3/scripts/fetch_upstream.sh" \
 
 (
   cd -- "${BOOTSTRAP_REPORT_DIR}"
-  sha256sum preflight-static.json requirements.freeze.txt >checksums.sha256
+  sha256sum model-snapshot.json preflight-static.json requirements.freeze.txt \
+    >checksums.sha256
 )
 
 printf 'Bootstrap complete. Static evidence: %s\n' "${BOOTSTRAP_REPORT_DIR}"

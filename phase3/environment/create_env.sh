@@ -9,6 +9,7 @@ readonly CONSTRAINTS_FILE="${SCRIPT_DIR}/constraints-runpod-cu118.txt"
 readonly EXPECTED_PYTHON_VERSION="3.10.13"
 readonly EXPECTED_PIP_VERSION="23.2.1"
 readonly MINIFORGE_RELEASE="24.7.1-2"
+readonly MINIFORGE_INSTALLER="Miniforge3-${MINIFORGE_RELEASE}-Linux-x86_64.sh"
 
 RUNTIME_ROOT="/workspace/phase3"
 ENV_DIR=""
@@ -93,7 +94,7 @@ find_conda() {
 install_miniforge() {
   local install_dir="${RUNTIME_ROOT}/tools/miniforge3"
   local download_dir="${RUNTIME_ROOT}/tools/downloads"
-  local installer="${download_dir}/Miniforge3-${MINIFORGE_RELEASE}-Linux-x86_64.sh"
+  local installer="${download_dir}/${MINIFORGE_INSTALLER}"
   local checksum_file="${installer}.sha256"
   local base_url="https://github.com/conda-forge/miniforge/releases/download/${MINIFORGE_RELEASE}"
 
@@ -104,15 +105,17 @@ install_miniforge() {
 
   mkdir -p -- "${download_dir}"
   curl --fail --location --retry 3 --output "${installer}" \
-    "${base_url}/Miniforge3-Linux-x86_64.sh"
+    "${base_url}/${MINIFORGE_INSTALLER}"
   curl --fail --location --retry 3 --output "${checksum_file}" \
-    "${base_url}/Miniforge3-Linux-x86_64.sh.sha256"
+    "${base_url}/${MINIFORGE_INSTALLER}.sha256"
   local expected_sha actual_sha
   expected_sha="$(awk 'NR == 1 {print $1}' "${checksum_file}")"
   actual_sha="$(sha256sum "${installer}" | awk '{print $1}')"
   [[ "${expected_sha}" =~ ^[0-9a-fA-F]{64}$ ]] || die "invalid Miniforge checksum file"
   [[ "${actual_sha,,}" == "${expected_sha,,}" ]] || die "Miniforge checksum verification failed"
-  bash "${installer}" -b -p "${install_dir}"
+  # install_miniforge is called through command substitution so its stdout must
+  # contain only the final conda path.  Send installer progress to stderr.
+  bash "${installer}" -b -p "${install_dir}" >&2
   [[ -x "${install_dir}/bin/conda" ]] || die "Miniforge installation did not create conda"
   printf '%s\n' "${install_dir}/bin/conda"
 }

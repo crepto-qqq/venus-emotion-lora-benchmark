@@ -4,8 +4,11 @@
 
 Member 1 establishes a controlled Phase 3 runtime with pinned top-level
 dependencies and a captured resolved package freeze, then proves it with one
-real image in BF16 forward/backward. The run stops after gradient checks. It performs
-no optimizer step and saves no adapter or checkpoint. Full-data conversion,
+real image in a controlled forward/backward pass. The floating base parameters
+and input entering the PEFT wrapper are BF16; the trainable LoRA adapter
+parameters are FP32. This evidence does not assert the dtype of every internal
+LoRA matrix operation. The run stops after gradient checks, performs no
+optimizer step, and saves no adapter or checkpoint. Full-data conversion,
 formal LoRA settings, training, save/reload, inference, evaluation, and the
 small demonstration caller belong to later work.
 
@@ -18,10 +21,13 @@ stay under `phase3/`.
 Use the target setup in [`RUNPOD_TEAM_SETUP.md`](RUNPOD_TEAM_SETUP.md): a
 normal RunPod Team, one on-demand Secure Cloud Pod with at least 48 GB GPU
 memory, and one 120 GB Standard Network Volume mounted at `/workspace`. That
-target is still pending as of 2026-09-23; the existing account has two stopped
-legacy A40 Pods with separate Pod Volume Disks and no Network Volume. Do not run
-the acceptance command until the selected model snapshot and fixture image have
-been copied and verified on the target volume.
+target is still pending as of 2026-09-25. The account is personal and has no
+Pod or Network Volume. Every compatible 48 GB-or-larger candidate checked on
+the deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
+`Out of capacity`. The A100 PCIe listing showed a USD 1.59/hour baseline.
+Recheck capacity and price before any paid action. Do not run acceptance until
+the exact model snapshot and fixture image have been prepared and verified on
+the target volume.
 
 These inputs are fixed:
 
@@ -57,23 +63,22 @@ both upstream checkouts as shared read-only inputs after bootstrap. Members may
 write only to their own `members/<id>`, `runs/<id>`, and `reports/<id>`
 paths.
 
-## Step 1: provision and migrate the shared storage
+## Step 1: provision the shared runtime
 
 After the required RunPod account and billing actions are explicitly approved:
 
-1. Convert the personal account to a normal Team, with Member 1 as Admin.
-2. Create one 120 GB Standard Network Volume in a Secure Cloud location.
-3. Start only the old Pod that contains the verified Stage 1 snapshot and
-   required fixture source; record its start time and current hourly price.
-4. Copy the required immutable model snapshot and fixture source to the new
-   Network Volume, then verify counts and hashes before stopping the old Pod.
-5. Keep both old Pod Volume Disks until the migration evidence has been checked.
-   Their deletion is a separate destructive decision.
-6. Deploy the new 48 GB Pod with the Network Volume mounted at `/workspace`.
-
-Do not claim a migration from a file count alone. Record the model revision,
-ten weight-shard count, total shard bytes, index file, and the technical image
-SHA-256.
+1. Recheck the deployment page for a compatible GPU with actual capacity. The
+   smoke requires at least 44 GiB total GPU memory and 40 GiB free immediately
+   before model load; a 48 GB-or-larger GPU is the practical minimum.
+2. Record the exact region, GPU type, displayed hourly price, volume price, and
+   intended maximum runtime for review.
+3. Convert the personal account to a normal Team, with Member 1 as Admin.
+4. Create one 120 GB Standard Network Volume in that same Secure Cloud region.
+5. Deploy one Pod with the volume mounted at `/workspace`. Do not create a Pod
+   or volume per member.
+6. Use the locked bootstrap download described below. There is no existing Pod
+   or disk to copy; the authoritative model source is the pinned Hugging Face
+   revision.
 
 ## Step 2: bootstrap from a clean shell
 
@@ -84,16 +89,24 @@ shell-local variables. From the project repository root:
 bash phase3/scripts/bootstrap.sh \
   --member-id member1 \
   --workspace-root /workspace/phase3 \
-  --model-path /workspace/models/Venus-Q-Stage1
+  --model-path /workspace/models/Venus-Q-Stage1 \
+  --download-model-if-missing
 ```
 
 The script takes the shared writer lock, creates the stable directory layout,
 creates or verifies `/workspace/phase3/envs/venus-phase3`, fetches the exact
-Venus and Qwen commits, applies and verifies the reviewed Qwen patch, runs the
-static preflight, and records a full package freeze. Its evidence is written to:
+Venus and Qwen commits, applies and verifies the reviewed Qwen patch, and
+prepares the Stage 1 snapshot. Missing model files are downloaded only from the
+locked Hugging Face revision through the persistent
+`/workspace/phase3/cache/huggingface` cache. The preparation verifies all 22
+files, writes the exact provenance marker, removes all write bits from the
+pinned files, marker, and model root, then validates the structured report.
+Bootstrap finally runs static preflight and records a full package freeze. Its
+evidence is written to:
 
 ```text
 /workspace/phase3/reports/member1/bootstrap/
+  model-snapshot.json
   preflight-static.json
   requirements.freeze.txt
   checksums.sha256
@@ -116,11 +129,12 @@ Place the real image at:
 
 Its required SHA-256 is
 `f4552a57efd8ff17e0a7a9fe28e1e94e98401cc5a5ace21ee6c246d74766d082`.
+It must also be exactly 126,584 bytes and decode to 720 x 480 pixels.
 The acceptance command reads the exact first record from
 `data/datasets/contentment/train_contentment.jsonl`, checks the source record,
 annotation, and image hashes, checks available Eval20/Eval80 exclusion evidence,
-and emits the one-sample upstream JSON array. It does not convert the complete
-480-record snapshot.
+and emits the one-sample upstream JSON array plus its sidecar manifest. It does
+not convert the complete 480-record snapshot.
 
 ## Step 4: run one GPU acceptance attempt
 
@@ -135,10 +149,12 @@ bash phase3/scripts/member1_acceptance.sh \
 
 The command takes the shared writer lock and then runs:
 
-1. runtime preflight for source, model, disk, CUDA, BF16, package, and GPU-memory
-   requirements;
+1. runtime preflight for source, model, disk, CUDA, BF16, package, at least
+   44 GiB total GPU memory, and at least 40 GiB immediately free GPU memory;
 2. deterministic one-record fixture creation;
-3. one real BF16 forward loss and backward pass using technical rank 2 LoRA;
+3. one real forward loss and backward pass using BF16 floating base parameters,
+   BF16 input entering the PEFT wrapper, and FP32 technical rank 2 LoRA adapter
+   parameters;
 4. aggregate report and SHA-256 manifest creation.
 
 A successful attempt contains:
@@ -147,6 +163,7 @@ A successful attempt contains:
 preflight-runtime.json
 smoke-backward.json
 member1-handoff.json
+technical-fixture.json
 technical-fixture-manifest.json
 environment.freeze.txt
 fixture-artifacts.sha256
@@ -156,9 +173,11 @@ checksums.sha256
 
 The attempt becomes read-only after success. It passes only when the loss and
 an intended trainable gradient are finite, at least one intended gradient is
-non-zero, all pins match, `optimizer_step_performed` is false,
-`adapter_saved` is false, `full_dataset_ready` is false, and
-`formal_training_authorized` is false. A passing report establishes runtime
+non-zero, all pins match, exactly 128 target modules are matched, exactly
+3,506,176 LoRA parameters are trainable, and the 44/40 GiB GPU-memory gates
+pass. It also requires `optimizer_step_performed: false`,
+`adapter_saved: false`, `full_dataset_ready: false`, and
+`formal_training_authorized: false`. A passing report establishes runtime
 viability only.
 
 ## Step 5: verify from clean and separate accounts
@@ -182,10 +201,13 @@ bash phase3/scripts/verify_handoff.sh \
 
 Verification checks the existing hashes, schemas, exact Phase 3 commit, exact
 Qwen diff, full 22-file model manifest, captured environment freeze, fixture
-evidence chain, shared reads, and member-scoped write paths. It snapshots Member 1's
-attempt before and after the check to prove it was not changed. It never reruns
-the GPU smoke. By default, its timestamped result is created below
-`/workspace/phase3/reports/<caller>/`.
+JSON and sidecar semantics, fixture hashes, shared reads, and member-scoped
+write paths. It rejects symlinks, nested entries, writable source artifacts, or
+missing shared read bits. It snapshots Member 1's attempt before and after the
+check to prove it was not changed and replaces any provisional success with a
+`source_bundle_changed` failure if the bundle changes. It never reruns the GPU
+smoke. By default, its timestamped result and checksum are sealed read-only
+below `/workspace/phase3/reports/<caller>/`.
 
 The script validates filesystem behavior under the supplied `--member-id`; it
 does not authenticate the RunPod account or SSH key behind the shell. Calling
@@ -198,14 +220,18 @@ SSH-login evidence for Member 2. The machine-readable status remains
 - Rerun bootstrap after a network interruption. It verifies completed artifacts
   before reuse.
 - Preserve every failed acceptance directory and use `attempt-002`,
-  `attempt-003`, and so on.
+  `attempt-003`, and so on. A smoke failure keeps its machine-readable report;
+  a handoff-verification failure records a stable `failure_code`, retains
+  completed checks when possible, writes a checksum, and seals caller-owned
+  evidence.
 - `flock` releases the kernel lock when its process exits. The lock file may
   remain as an audit marker and must not be treated as proof that a process is
   still running.
 - If a pin or checksum differs, stop and restore the exact input. Do not repair
   a shared checkout in place while another member is using it.
-- If 48 GB is insufficient, retain the failure report and stop. Do not change
-  the technical test into a different experiment.
+- If either the 44 GiB total-memory gate or 40 GiB immediate free-memory gate
+  fails, retain the failure report and stop. Do not change the technical test
+  into a different experiment.
 - Stop the GPU Pod immediately after acceptance and cross-account verification.
   Confirm the stopped state in the RunPod console.
 
@@ -216,14 +242,16 @@ access is available:
 
 | Stage | Expected active time |
 | --- | ---: |
-| Team, storage, access, and migration checks | 1-3 hours |
-| Environment and exact upstream bootstrap | 1-2 hours |
+| Capacity check, Team conversion, volume, Pod, and access setup | 30-90 minutes |
+| Environment, exact upstream, pinned model download, hashing, and seal | 2-5 hours |
 | Real-image GPU acceptance and one retry allowance | 1-2 hours |
 | Clean-shell and cross-account verification | 30-60 minutes |
 | Report review and handoff | 30-60 minutes |
 
-Allow one to two working days for Member 1, mainly because model transfer,
-package downloads, GPU availability, team invitation acceptance, or a retry can
-add elapsed time. None of Member 1's tasks should become a dependency on the
-user's availability: repository scripts, pins, and evidence paths are shared
-and reviewable by the other members.
+The expected active work is about 4.5-10.5 hours after approvals and deployable
+capacity exist. Allow one to two working days because a roughly 19.3 GB model
+download, full hashing, package downloads, invitation acceptance, or one retry
+can add elapsed time. GPU capacity can add an unbounded wait before that work
+starts. Repository scripts, pins, and evidence paths are shared and reviewable,
+so Members 2-6 are not blocked by Member 1's day-to-day availability after the
+handoff artifacts exist.

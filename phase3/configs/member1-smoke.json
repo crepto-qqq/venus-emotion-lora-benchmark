@@ -8,10 +8,14 @@
     "record_line": 1,
     "record_sha256": "61253e619f2def398f81aa11a054e3e767890d460ad543babd8454203472c417",
     "annotation_sha256": "05718aa5a5da5b0b0896eb1938165ad57ddefbaeda9ff1013cb3746c2e91901b",
-    "image_sha256": "f4552a57efd8ff17e0a7a9fe28e1e94e98401cc5a5ace21ee6c246d74766d082"
+    "image_sha256": "f4552a57efd8ff17e0a7a9fe28e1e94e98401cc5a5ace21ee6c246d74766d082",
+    "image_byte_count": 126584,
+    "image_width": 720,
+    "image_height": 480
   },
   "runtime": {
     "minimum_gpu_memory_bytes": 47244640256,
+    "minimum_free_gpu_memory_bytes": 42949672960,
     "minimum_free_disk_bytes": 37580963840,
     "dtype": "bfloat16",
     "max_sequence_length": 2048
@@ -26,7 +30,9 @@
       "attn.c_proj",
       "w1",
       "w2"
-    ]
+    ],
+    "expected_matched_module_count": 128,
+    "expected_trainable_parameter_count": 3506176
   },
   "policy": {
     "optimizer_step_performed": false,

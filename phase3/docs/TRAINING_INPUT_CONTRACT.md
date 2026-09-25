@@ -41,15 +41,21 @@ image tag.
 ## Member 1 fixture
 
 Member 1 creates exactly one runtime conversion for `contentment_05000`. Its
-purpose is to exercise the real-image BF16 forward/backward path. It lives
-under `/workspace/phase3/smoke/`, stays outside Git, and must not be presented
-as the full converter or a training dataset.
+purpose is to exercise the real-image forward/backward path with BF16 floating
+base parameters, BF16 input entering the PEFT wrapper, and FP32 trainable LoRA
+adapter parameters. It lives under `/workspace/phase3/smoke/`, stays outside
+Git, and must not be presented as the full converter or a training dataset.
 
 The builder also writes a sidecar manifest for the source record, annotation,
 image hashes, split, and available Eval20/Eval80 disjointness evidence. The
 source record and image are fixed by `configs/member1-smoke.json`; substituting
 another accepted example would create a different test and is not allowed in
-Member 1's acceptance.
+Member 1's acceptance. The locked image is 126,584 bytes, 720 x 480 pixels, and
+has SHA-256
+`f4552a57efd8ff17e0a7a9fe28e1e94e98401cc5a5ace21ee6c246d74766d082`.
+The immutable attempt includes both `technical-fixture.json` and
+`technical-fixture-manifest.json`; both are covered by the fixture sidecar and
+the complete attempt checksums.
 
 Member 2 owns the complete deterministic converter, its validation, all
 accepted-record filtering, collision/duplicate checks, and the final training

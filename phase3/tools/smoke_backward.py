@@ -48,6 +48,10 @@ EXPECTED_LORA_RANK = 2
 EXPECTED_LORA_ALPHA = 4
 EXPECTED_LORA_DROPOUT = 0.0
 EXPECTED_TARGET_MODULES = ("c_attn", "attn.c_proj", "w1", "w2")
+EXPECTED_MATCHED_TARGET_MODULE_COUNT = 128
+EXPECTED_TRAINABLE_PARAMETER_COUNT = 3_506_176
+EXPECTED_MINIMUM_TOTAL_GPU_MEMORY_BYTES = 44 * 1024**3
+EXPECTED_MINIMUM_FREE_GPU_MEMORY_BYTES = 40 * 1024**3
 IGNORE_TOKEN_ID = -100
 
 _IMAGE_PATH_RE = re.compile(r"<img>([^<>]+)</img>", re.DOTALL)
@@ -176,7 +180,8 @@ def _empty_report(member_id: str, source_lock: dict[str, Any] | None) -> dict[st
         "model": {
             "repository": str(model_lock.get("repository", "unknown")),
             "revision": str(model_lock.get("revision", "unknown")),
-            "dtype": EXPECTED_DTYPE,
+            "base_dtype": None,
+            "forward_input_dtype": None,
             "device": "unavailable",
         },
         "batch": {
@@ -185,10 +190,12 @@ def _empty_report(member_id: str, source_lock: dict[str, Any] | None) -> dict[st
             "supervised_token_count": 0,
             "image_token_count": 0,
             "loss": None,
+            "loss_dtype": None,
         },
         "lora": {
             "rank": EXPECTED_LORA_RANK,
             "alpha": EXPECTED_LORA_ALPHA,
+            "adapter_dtype": None,
             "target_modules": list(EXPECTED_TARGET_MODULES),
             "matched_target_names": [],
             "total_parameter_count": 0,
@@ -197,6 +204,10 @@ def _empty_report(member_id: str, source_lock: dict[str, Any] | None) -> dict[st
             "nonzero_gradient_parameter_names": [],
         },
         "memory": {
+            "total_gpu_memory_bytes": 0,
+            "free_gpu_memory_bytes": 0,
+            "minimum_total_gpu_memory_bytes": EXPECTED_MINIMUM_TOTAL_GPU_MEMORY_BYTES,
+            "minimum_free_gpu_memory_bytes": EXPECTED_MINIMUM_FREE_GPU_MEMORY_BYTES,
             "peak_allocated_bytes": 0,
             "peak_reserved_bytes": 0,
         },
@@ -227,6 +238,20 @@ def _load_and_validate_inputs(
     policy = _require_mapping(config.get("policy"), "smoke config policy")
     if runtime.get("dtype") != EXPECTED_DTYPE:
         raise SmokeFailure(f"runtime dtype must be {EXPECTED_DTYPE}")
+    if (
+        int(runtime.get("minimum_gpu_memory_bytes", 0))
+        != EXPECTED_MINIMUM_TOTAL_GPU_MEMORY_BYTES
+    ):
+        raise SmokeFailure(
+            "minimum total GPU memory must remain fixed at 44 GiB for this acceptance"
+        )
+    if (
+        int(runtime.get("minimum_free_gpu_memory_bytes", 0))
+        != EXPECTED_MINIMUM_FREE_GPU_MEMORY_BYTES
+    ):
+        raise SmokeFailure(
+            "minimum free GPU memory must remain fixed at 40 GiB for this acceptance"
+        )
     if int(runtime.get("max_sequence_length", 0)) < 1:
         raise SmokeFailure("max_sequence_length must be positive")
     if int(lora.get("rank", 0)) != EXPECTED_LORA_RANK:
@@ -240,6 +265,21 @@ def _load_and_validate_inputs(
     if tuple(lora.get("target_modules", [])) != EXPECTED_TARGET_MODULES:
         raise SmokeFailure(
             "technical target modules must be c_attn, attn.c_proj, w1, and w2"
+        )
+    if (
+        int(lora.get("expected_matched_module_count", 0))
+        != EXPECTED_MATCHED_TARGET_MODULE_COUNT
+    ):
+        raise SmokeFailure(
+            f"locked architecture must expose {EXPECTED_MATCHED_TARGET_MODULE_COUNT} LoRA targets"
+        )
+    if (
+        int(lora.get("expected_trainable_parameter_count", 0))
+        != EXPECTED_TRAINABLE_PARAMETER_COUNT
+    ):
+        raise SmokeFailure(
+            "locked rank-2 adapter must expose exactly "
+            f"{EXPECTED_TRAINABLE_PARAMETER_COUNT} trainable parameters"
         )
     for forbidden_true in (
         "optimizer_step_performed",
@@ -367,17 +407,45 @@ def _matched_modules(model: Any, targets: Sequence[str]) -> list[str]:
     )
 
 
-def _check_target_dtypes(model: Any, matched_names: Sequence[str], torch: Any) -> None:
-    modules = dict(model.named_modules())
-    non_bf16: list[str] = []
-    for name in matched_names:
-        weight = getattr(modules[name], "weight", None)
-        if weight is not None and getattr(weight, "is_floating_point", lambda: False)():
-            if weight.dtype != torch.bfloat16:
-                non_bf16.append(name)
-    if non_bf16:
-        sample = ", ".join(non_bf16[:5])
-        raise SmokeFailure(f"LoRA base target weights are not BF16: {sample}")
+def _dtype_name(dtype: Any) -> str:
+    """Return a stable report spelling for a torch dtype."""
+    value = str(dtype)
+    return value[6:] if value.startswith("torch.") else value
+
+
+def _require_unique_floating_parameter_dtype(
+    named_parameters: Sequence[tuple[str, Any]],
+    *,
+    expected_dtype: Any,
+    label: str,
+) -> str:
+    """Verify every floating parameter in one evidence set has one dtype."""
+    floating = [
+        (name, parameter)
+        for name, parameter in named_parameters
+        if bool(getattr(parameter, "is_floating_point", lambda: False)())
+    ]
+    if not floating:
+        raise SmokeFailure(f"{label} contains no floating parameters")
+    observed = {parameter.dtype for _, parameter in floating}
+    if observed != {expected_dtype}:
+        names = ", ".join(
+            f"{name}={_dtype_name(parameter.dtype)}" for name, parameter in floating[:5]
+        )
+        raise SmokeFailure(
+            f"{label} dtype must be {_dtype_name(expected_dtype)}; observed {names}"
+        )
+    return _dtype_name(expected_dtype)
+
+
+def _gpu_memory_gate(
+    total_bytes: int,
+    free_bytes: int,
+    minimum_total_bytes: int,
+    minimum_free_bytes: int,
+) -> bool:
+    """Pure boundary predicate shared with the unit test."""
+    return total_bytes >= minimum_total_bytes and free_bytes >= minimum_free_bytes
 
 
 def _prepare_batch(
@@ -560,10 +628,28 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
     device = torch.device("cuda", args.device_index)
     properties = torch.cuda.get_device_properties(device)
     report["model"]["device"] = f"cuda:{args.device_index} ({properties.name})"
-    minimum_memory = int(config["runtime"]["minimum_gpu_memory_bytes"])
-    if int(properties.total_memory) < minimum_memory:
+    torch.cuda.empty_cache()
+    free_memory, total_memory = torch.cuda.mem_get_info(device)
+    minimum_total_memory = int(config["runtime"]["minimum_gpu_memory_bytes"])
+    minimum_free_memory = int(config["runtime"]["minimum_free_gpu_memory_bytes"])
+    report["memory"].update(
+        {
+            "total_gpu_memory_bytes": int(total_memory),
+            "free_gpu_memory_bytes": int(free_memory),
+            "minimum_total_gpu_memory_bytes": minimum_total_memory,
+            "minimum_free_gpu_memory_bytes": minimum_free_memory,
+        }
+    )
+    if not _gpu_memory_gate(
+        int(total_memory),
+        int(free_memory),
+        minimum_total_memory,
+        minimum_free_memory,
+    ):
         raise SmokeFailure(
-            f"GPU memory is {properties.total_memory} bytes; at least {minimum_memory} is required"
+            "GPU memory gate failed before model loading "
+            f"(total={total_memory}, free={free_memory}, "
+            f"minimum_total={minimum_total_memory}, minimum_free={minimum_free_memory})"
         )
     is_bf16_supported = getattr(torch.cuda, "is_bf16_supported", lambda: False)
     if not bool(is_bf16_supported()):
@@ -610,7 +696,6 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
             f"source lock requires {expected_shard_bytes}"
         )
 
-    torch.cuda.empty_cache()
     torch.cuda.reset_peak_memory_stats(device)
     upstream = _load_upstream_finetune(finetune_path, args.upstream_dir)
     max_length = int(config["runtime"]["max_sequence_length"])
@@ -652,6 +737,11 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         local_files_only=True,
         use_safetensors=True,
     )
+    report["model"]["base_dtype"] = _require_unique_floating_parameter_dtype(
+        list(model.named_parameters()),
+        expected_dtype=torch.bfloat16,
+        label="loaded base model",
+    )
 
     transformer = getattr(model, "transformer", None)
     visual = getattr(transformer, "visual", None)
@@ -659,7 +749,12 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         raise SmokeFailure("loaded model exposes no transformer.visual tower")
     visual.requires_grad_(False)
     matched_names = _matched_modules(model, EXPECTED_TARGET_MODULES)
-    _check_target_dtypes(model, matched_names, torch)
+    if len(matched_names) != EXPECTED_MATCHED_TARGET_MODULE_COUNT:
+        raise SmokeFailure(
+            "locked model architecture exposed "
+            f"{len(matched_names)} LoRA target modules; "
+            f"expected {EXPECTED_MATCHED_TARGET_MODULE_COUNT}"
+        )
     report["lora"]["matched_target_names"] = matched_names
 
     lora_config = LoraConfig(
@@ -672,11 +767,8 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         modules_to_save=None,
     )
     model = get_peft_model(model, lora_config)
-    # The fixed fixture is roughly 800 tokens after image expansion.  The
-    # 10B-parameter snapshot leaves much less than 30 GiB for activations on an
-    # A40 with ECC enabled, so use the same Transformers/PEFT 0.5 checkpointing
-    # path that the upstream Trainer supports.  This changes activation storage,
-    # not the tested forward/backward semantics or the Member 1 stop line.
+    # Use the same Transformers/PEFT 0.5 checkpointing path that the upstream
+    # Trainer supports to bound activation memory for the fixed fixture.
     model.gradient_checkpointing_enable()
     model.enable_input_require_grads()
     model.train()
@@ -706,9 +798,21 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         raise SmokeFailure("visual tower parameters remain trainable after LoRA injection")
     if any(parameter.device.type != "cuda" for _, parameter in trainable):
         raise SmokeFailure("one or more trainable LoRA parameters are not on CUDA")
+    if trainable_parameter_count != EXPECTED_TRAINABLE_PARAMETER_COUNT:
+        raise SmokeFailure(
+            "locked rank-2 adapter exposed "
+            f"{trainable_parameter_count} trainable parameters; "
+            f"expected {EXPECTED_TRAINABLE_PARAMETER_COUNT}"
+        )
+    adapter_dtype = _require_unique_floating_parameter_dtype(
+        trainable,
+        expected_dtype=torch.float32,
+        label="trainable LoRA adapter",
+    )
 
     report["lora"].update(
         {
+            "adapter_dtype": adapter_dtype,
             "total_parameter_count": int(total_parameter_count),
             "trainable_parameter_count": int(trainable_parameter_count),
             "trainable_parameter_names": trainable_names,
@@ -717,7 +821,7 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
 
     batch_on_device = {key: value.to(device) for key, value in batch.items()}
     model.zero_grad(set_to_none=True)
-    observed_lora_input_dtypes: list[Any] = []
+    observed_forward_input_dtypes: list[Any] = []
     observed_module = next(
         (
             module
@@ -727,23 +831,32 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         None,
     )
     if observed_module is None:
-        raise SmokeFailure("could not locate an injected LoRA module for BF16 observation")
+        raise SmokeFailure("could not locate an injected LoRA module for input observation")
 
-    def _observe_lora_input(_module: Any, inputs: tuple[Any, ...]) -> None:
-        if inputs and isinstance(inputs[0], torch.Tensor):
-            observed_lora_input_dtypes.append(inputs[0].dtype)
+    # This hook records the BF16 input to the PEFT wrapper.  PEFT 0.5 casts that
+    # tensor to the FP32 lora_A weight internally, so this is input evidence and
+    # deliberately makes no claim that the adapter matmul itself runs in BF16.
+    def _observe_forward_input(_module: Any, inputs: tuple[Any, ...]) -> None:
+        if (
+            inputs
+            and isinstance(inputs[0], torch.Tensor)
+            and bool(inputs[0].is_floating_point())
+        ):
+            observed_forward_input_dtypes.append(inputs[0].dtype)
 
-    observation_handle = observed_module.register_forward_pre_hook(_observe_lora_input)
+    observation_handle = observed_module.register_forward_pre_hook(_observe_forward_input)
     try:
         outputs = model(**batch_on_device)
     finally:
         observation_handle.remove()
-    if torch.bfloat16 not in observed_lora_input_dtypes:
-        observed = ", ".join(sorted({str(dtype) for dtype in observed_lora_input_dtypes}))
+    observed_input_dtypes = set(observed_forward_input_dtypes)
+    if observed_input_dtypes != {torch.bfloat16}:
+        observed = ", ".join(sorted(_dtype_name(dtype) for dtype in observed_input_dtypes))
         raise SmokeFailure(
-            "LoRA training path did not observe BF16 activations"
+            "adapter wrapper forward input dtype must be bfloat16"
             + (f" (observed {observed})" if observed else "")
         )
+    report["model"]["forward_input_dtype"] = EXPECTED_DTYPE
     loss = getattr(outputs, "loss", None)
     if loss is None or loss.numel() != 1:
         raise SmokeFailure("model forward returned no scalar supervised loss")
@@ -752,7 +865,11 @@ def _run(args: argparse.Namespace, report: dict[str, Any]) -> None:
         raise SmokeFailure("model forward returned a non-finite loss")
     if not loss.requires_grad:
         raise SmokeFailure("model forward loss has no gradient function")
+    loss_dtype = _dtype_name(loss.dtype)
+    if loss_dtype not in {"bfloat16", "float32"}:
+        raise SmokeFailure(f"unexpected supervised loss dtype: {loss_dtype}")
     report["batch"]["loss"] = loss_value
+    report["batch"]["loss_dtype"] = loss_dtype
     report["forward_passed"] = True
 
     # Acceptance intentionally ends immediately after this call.  No optimizer

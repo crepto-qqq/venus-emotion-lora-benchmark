@@ -10,8 +10,10 @@ from typing import Any
 
 from common import (
     assert_report_is_redacted,
+    expected_model_provenance,
     git_output,
     read_json,
+    sha256_bytes,
     sha256_file,
     utc_now,
     write_json_atomic,
@@ -22,6 +24,7 @@ SCHEMAS = {
     "preflight": "preflight-report.schema.json",
     "smoke": "smoke-report.schema.json",
     "member1": "member1-report.schema.json",
+    "model_snapshot": "model-snapshot-report.schema.json",
     "fixture": "technical-fixture.schema.json",
     "verification": "handoff-verification.schema.json",
 }
@@ -29,6 +32,7 @@ KIND_TO_SCHEMA = {
     "phase3_preflight": "preflight",
     "phase3_smoke_backward": "smoke",
     "phase3_member1_handoff": "member1",
+    "phase3_model_snapshot": "model_snapshot",
     "phase3_handoff_verification": "verification",
 }
 
@@ -54,6 +58,29 @@ def _validate_semantics(value: Any, schema_kind: str, project_root: Path) -> Non
         failures = [check for check in value["checks"] if check["status"] == "fail"]
         if value["passed"] != (not failures):
             raise ValueError("preflight passed flag is inconsistent with its checks")
+        if value["mode"] == "runtime" and value["passed"]:
+            smoke_lock = read_json(project_root / "phase3/configs/member1-smoke.json")
+            cuda_checks = [
+                check for check in value["checks"] if check["name"] == "cuda_bf16_gpu"
+            ]
+            if len(cuda_checks) != 1 or cuda_checks[0]["status"] != "pass":
+                raise ValueError("passing runtime preflight has no unique CUDA memory check")
+            observed = cuda_checks[0].get("observed")
+            if not isinstance(observed, dict):
+                raise ValueError("runtime CUDA check has no machine-readable observation")
+            minimum_total = int(smoke_lock["runtime"]["minimum_gpu_memory_bytes"])
+            minimum_free = int(
+                smoke_lock["runtime"]["minimum_free_gpu_memory_bytes"]
+            )
+            if (
+                observed.get("cuda_available") is not True
+                or observed.get("bf16_supported") is not True
+                or observed.get("minimum_total_memory_bytes") != minimum_total
+                or observed.get("minimum_free_memory_bytes") != minimum_free
+                or int(observed.get("total_memory_bytes", -1)) < minimum_total
+                or int(observed.get("free_memory_bytes", -1)) < minimum_free
+            ):
+                raise ValueError("runtime CUDA total/free memory evidence fails the lock")
     elif schema_kind == "smoke":
         lora = value["lora"]
         expected_pass = (
@@ -82,10 +109,81 @@ def _validate_semantics(value: Any, schema_kind: str, project_root: Path) -> Non
             expected_model = {
                 "repository": source_lock["model"]["repository"],
                 "revision": source_lock["model"]["revision"],
-                "dtype": smoke_lock["runtime"]["dtype"],
+                "base_dtype": smoke_lock["runtime"]["dtype"],
+                "forward_input_dtype": smoke_lock["runtime"]["dtype"],
             }
             if any(value["model"].get(key) != expected for key, expected in expected_model.items()):
                 raise ValueError("smoke model identity or dtype differs from the source lock")
+            expected_lora = smoke_lock["lora"]
+            if (
+                value["lora"].get("adapter_dtype") != "float32"
+                or len(value["lora"]["matched_target_names"])
+                != int(expected_lora["expected_matched_module_count"])
+                or value["lora"]["trainable_parameter_count"]
+                != int(expected_lora["expected_trainable_parameter_count"])
+            ):
+                raise ValueError("smoke LoRA dtype or locked architecture evidence differs")
+            if value["batch"].get("loss_dtype") not in {"bfloat16", "float32"}:
+                raise ValueError("smoke report has no supported observed loss dtype")
+            minimum_total = int(smoke_lock["runtime"]["minimum_gpu_memory_bytes"])
+            minimum_free = int(
+                smoke_lock["runtime"]["minimum_free_gpu_memory_bytes"]
+            )
+            memory = value["memory"]
+            if (
+                memory["minimum_total_gpu_memory_bytes"] != minimum_total
+                or memory["minimum_free_gpu_memory_bytes"] != minimum_free
+                or memory["total_gpu_memory_bytes"] < minimum_total
+                or memory["free_gpu_memory_bytes"] < minimum_free
+            ):
+                raise ValueError("smoke report GPU total/free memory evidence fails the lock")
+    elif schema_kind == "model_snapshot":
+        source_lock = read_json(project_root / "phase3/configs/source-lock.json")
+        model_lock = source_lock["model"]
+        expected_source = {
+            "repository": model_lock["repository"],
+            "revision": model_lock["revision"],
+            "weight_format": model_lock["weight_format"],
+            "snapshot_manifest_sha256": model_lock["snapshot_manifest_sha256"],
+        }
+        if value["source_lock"] != expected_source:
+            raise ValueError("model snapshot report source identity differs from the lock")
+
+        sealed = value["sealed"]
+        evidence_complete = (
+            isinstance(value["snapshot"], dict)
+            and isinstance(value["provenance"], dict)
+            and sealed["applied"]
+            and sealed["verified"]
+            and sealed["manifest_files_read_only"]
+            and sealed["marker_read_only"]
+            and sealed["model_root_read_only"]
+            and not value["errors"]
+        )
+        if value["passed"] != evidence_complete:
+            raise ValueError("model snapshot passed flag is inconsistent with its evidence")
+
+        if value["passed"]:
+            expected_snapshot = {
+                "manifest_sha256": model_lock["snapshot_manifest_sha256"],
+                "file_count": int(model_lock["snapshot_file_count"]),
+                "total_bytes": int(model_lock["snapshot_total_bytes"]),
+            }
+            if value["snapshot"] != expected_snapshot:
+                raise ValueError("model snapshot observation differs from the source lock")
+
+            marker = expected_model_provenance(model_lock)
+            marker_payload = (
+                json.dumps(marker, indent=2, ensure_ascii=False, sort_keys=True) + "\n"
+            ).encode("utf-8")
+            expected_provenance = {
+                **marker,
+                "marker_sha256": sha256_bytes(marker_payload),
+            }
+            if value["provenance"] != expected_provenance:
+                raise ValueError("model provenance evidence differs from the source lock")
+            if sealed["manifest_file_count"] != expected_snapshot["file_count"]:
+                raise ValueError("model seal file count differs from the source lock")
     elif schema_kind == "member1":
         expected_smoke = value["forward_passed"] and value["backward_passed"]
         if value["technical_smoke_passed"] != expected_smoke:
@@ -161,7 +259,8 @@ def aggregate(
     expected_model = {
         "repository": source_lock["model"]["repository"],
         "revision": source_lock["model"]["revision"],
-        "dtype": smoke_config["runtime"]["dtype"],
+        "base_dtype": smoke_config["runtime"]["dtype"],
+        "forward_input_dtype": smoke_config["runtime"]["dtype"],
     }
     observed_model = {key: smoke["model"].get(key) for key in expected_model}
     if observed_model != expected_model:
@@ -171,8 +270,25 @@ def aggregate(
         smoke["lora"]["rank"] != expected_lora["rank"]
         or smoke["lora"]["alpha"] != expected_lora["alpha"]
         or smoke["lora"]["target_modules"] != expected_lora["target_modules"]
+        or smoke["lora"]["adapter_dtype"] != "float32"
+        or len(smoke["lora"]["matched_target_names"])
+        != int(expected_lora["expected_matched_module_count"])
+        or smoke["lora"]["trainable_parameter_count"]
+        != int(expected_lora["expected_trainable_parameter_count"])
     ):
         raise ValueError("smoke report LoRA probe settings do not match member1-smoke.json")
+    if smoke["batch"].get("loss_dtype") not in {"bfloat16", "float32"}:
+        raise ValueError("smoke report has no supported observed loss dtype")
+    minimum_total = int(smoke_config["runtime"]["minimum_gpu_memory_bytes"])
+    minimum_free = int(smoke_config["runtime"]["minimum_free_gpu_memory_bytes"])
+    smoke_memory = smoke["memory"]
+    if (
+        smoke_memory["minimum_total_gpu_memory_bytes"] != minimum_total
+        or smoke_memory["minimum_free_gpu_memory_bytes"] != minimum_free
+        or smoke_memory["total_gpu_memory_bytes"] < minimum_total
+        or smoke_memory["free_gpu_memory_bytes"] < minimum_free
+    ):
+        raise ValueError("smoke report GPU total/free memory evidence fails the lock")
     fixture_lock = smoke_config["fixture"]
     expected_fixture = {
         "id": fixture_lock["source_image_id"],

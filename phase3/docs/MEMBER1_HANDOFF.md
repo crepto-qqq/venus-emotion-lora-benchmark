@@ -11,8 +11,11 @@ requires these runtime deliverables:
 - one shared environment at `/workspace/phase3/envs/venus-phase3`, built from
   pinned top-level dependencies and accompanied by its captured package freeze;
 - exact Venus and Qwen source integration with a reviewed compatibility patch;
-- reuse and validation of the immutable Venus-Q-Stage1 snapshot;
-- one real `contentment_05000` BF16 forward/backward technical run;
+- direct preparation and read-only sealing of the immutable Venus-Q-Stage1
+  snapshot at its pinned Hugging Face revision;
+- one real `contentment_05000` forward/backward technical run with BF16
+  floating base parameters and wrapper input plus FP32 trainable LoRA adapter
+  parameters;
 - redacted static, runtime, smoke, aggregate, and handoff-verification evidence;
 - the RunPod Team, shared volume layout, access procedure, and one-writer rule.
 
@@ -31,26 +34,34 @@ no training, data-upload, or evaluation HTTP API is in scope.
 | Qwen compatibility patch | `be9e14a60f4f2189a108aa1f46a7384616bfdd527ca6c0a41a4c175a92172eba` |
 | `popo28/Venus-Q-Stage1` | `0f5c00c8d07ba889e9c5d12f828129dc322aae6a` |
 
-The model lives at `/workspace/models/Venus-Q-Stage1`. The patched Qwen tree
-and clean Venus tree live below `/workspace/phase3/upstream`. Later members
-must treat these as shared read-only inputs.
+The model lives at `/workspace/models/Venus-Q-Stage1`. Bootstrap may download
+missing files directly from the locked revision, verifies the full 22-file
+manifest and exact provenance, then removes write bits from the pinned files,
+provenance marker, and model root. The patched Qwen tree and clean Venus tree
+live below `/workspace/phase3/upstream`. Later members must treat these as
+shared read-only inputs.
 
 ## Repository state versus cloud acceptance
 
 The checked-in scripts, pins, schemas, and documentation are repository-side
 preparation. They are not evidence that RunPod provisioning or GPU acceptance
-has happened. As of 2026-09-23, the observed account has two stopped legacy A40
-Pods with separate 120 GB Pod Volume Disks and no Network Volume. The Team,
-120 GB Network Volume, migration, new shared Pod, invitations, and real GPU
-reports remain runtime actions.
+has happened. As of 2026-09-25, the observed account is personal and has no Pod
+or Network Volume. The Team, 120 GB Network Volume, new shared Pod, invitations,
+and real GPU reports remain runtime actions. Every compatible 48 GB-or-larger
+candidate checked on the deployment page -- L40S, A40, RTX A6000, and A100
+PCIe 80 GB -- reported `Out of capacity`. The A100 PCIe listing showed a
+USD 1.59/hour baseline. No GPU availability is claimed until the deployment
+page is checked again.
 
 The handoff becomes complete only when:
 
 1. `bootstrap.sh` succeeds from a clean login shell on the target storage;
 2. `member1_acceptance.sh` produces a passing immutable attempt for the real
    `contentment_05000` image;
-3. the report records BF16 forward/backward with finite loss and a finite
-   non-zero intended LoRA gradient;
+3. the report proves at least 44 GiB total and 40 GiB immediately free GPU
+   memory, BF16 floating base parameters, BF16 wrapper input, FP32 trainable
+   LoRA adapter parameters, finite loss, and a finite non-zero intended LoRA
+   gradient;
 4. it records zero optimizer steps, no adapter/checkpoint save, and
    `full_dataset_ready: false` plus `formal_training_authorized: false`;
 5. Member 1 verifies from a fresh login and Member 2 verifies through a
@@ -63,6 +74,7 @@ Bootstrap evidence:
 
 ```text
 /workspace/phase3/reports/member1/bootstrap/
+  model-snapshot.json
   preflight-static.json
   requirements.freeze.txt
   checksums.sha256
@@ -75,6 +87,7 @@ One immutable acceptance attempt:
   preflight-runtime.json
   smoke-backward.json
   member1-handoff.json
+  technical-fixture.json
   technical-fixture-manifest.json
   environment.freeze.txt
   fixture-artifacts.sha256
@@ -84,7 +97,11 @@ One immutable acceptance attempt:
 
 Each handoff verification is timestamped below the caller's own report root,
 for example `/workspace/phase3/reports/member2/verification-*/`. Verification
-does not rewrite Member 1's attempt and does not execute the model.
+does not rewrite Member 1's attempt and does not execute the model. It checks a
+flat immutable bundle of regular files, validates both the fixture JSON and
+sidecar against the source locks, and compares before/after source snapshots.
+Success and failure outputs are sealed with checksums. A failure carries a
+stable `failure_code` and retains completed checks whenever possible.
 
 The verifier proves that the bundle, pinned inputs, shared reads, and
 caller-owned write path work under the supplied `--member-id`. That text value

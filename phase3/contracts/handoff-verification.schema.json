@@ -4,18 +4,19 @@
   "title": "Phase 3 cross-account handoff verification",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema_version", "kind", "generated_at_utc", "member_id", "passed", "source_report_dir", "source", "checks", "errors", "full_dataset_ready", "formal_training_authorized"],
+  "required": ["schema_version", "kind", "generated_at_utc", "member_id", "passed", "failure_code", "source_report_dir", "source", "checks", "errors", "full_dataset_ready", "formal_training_authorized"],
   "properties": {
     "schema_version": {"const": 1},
     "kind": {"const": "phase3_handoff_verification"},
     "generated_at_utc": {"type": "string", "format": "date-time"},
     "member_id": {"type": "string", "pattern": "^member[1-6]$"},
     "passed": {"type": "boolean"},
+    "failure_code": {"type": ["string", "null"], "pattern": "^[a-z][a-z0-9_]{2,63}$"},
     "source_report_dir": {"type": "string", "minLength": 1},
     "source": {
       "type": ["object", "null"],
       "additionalProperties": false,
-      "required": ["project_commit", "model_snapshot_manifest_sha256", "preflight_report_sha256", "smoke_report_sha256", "member1_report_sha256", "environment_freeze_sha256", "fixture_manifest_sha256", "checksum_manifest_sha256"],
+      "required": ["project_commit", "model_snapshot_manifest_sha256", "preflight_report_sha256", "smoke_report_sha256", "member1_report_sha256", "environment_freeze_sha256", "fixture_sha256", "fixture_manifest_sha256", "checksum_manifest_sha256"],
       "properties": {
         "project_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
         "model_snapshot_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
@@ -23,6 +24,7 @@
         "smoke_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "member1_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "environment_freeze_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "fixture_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "fixture_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
         "checksum_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
       }
@@ -52,14 +54,17 @@
           "source": {"type": "object"},
           "source_report_dir": {"pattern": "^<runtime>/reports/member1/"},
           "checks": {"minItems": 12, "items": {"properties": {"status": {"const": "pass"}}}},
-          "errors": {"maxItems": 0}
+          "errors": {"maxItems": 0},
+          "failure_code": {"type": "null"}
         }
       },
       "else": {
         "properties": {
           "source": {"type": "null"},
+          "failure_code": {"type": "string"},
           "errors": {"minItems": 1}
-        }
+        },
+        "required": ["failure_code"]
       }
     }
   ]

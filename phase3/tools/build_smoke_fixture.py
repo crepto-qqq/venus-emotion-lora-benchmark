@@ -188,6 +188,13 @@ def build_fixture(
     record = _read_locked_record(project_root, config)
     _validate_locked_record(record, fixture_lock)
     image_bytes, width, height = _validate_image(image, fixture_lock["image_sha256"])
+    expected_image_metadata = (
+        int(fixture_lock["image_byte_count"]),
+        int(fixture_lock["image_width"]),
+        int(fixture_lock["image_height"]),
+    )
+    if (image_bytes, width, height) != expected_image_metadata:
+        raise ValueError("technical fixture image metadata differs from member1-smoke.json")
     disjointness, disjointness_checks = _check_disjointness(
         project_root=project_root,
         source_image_id=fixture_lock["source_image_id"],
