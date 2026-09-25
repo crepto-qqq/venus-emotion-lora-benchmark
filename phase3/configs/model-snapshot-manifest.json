@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "repository": "popo28/Venus-Q-Stage1",
+  "revision": "0f5c00c8d07ba889e9c5d12f828129dc322aae6a",
+  "file_count": 22,
+  "total_bytes": 19315474586,
+  "files": [
+    {
+      "path": ".gitattributes",
+      "size": 1519,
+      "sha256": "11ad7efa24975ee4b0c3c3a38ed18737f0658a5f75a0a96787b576a78a023361",
+      "storage": "git_blob"
+    },
+    {
+      "path": "config.json",
+      "size": 1196,
+      "sha256": "35c7e835011893aa2b199e9f46573641abdd249b87dbc09edf8569514dbcf486",
+      "storage": "git_blob"
+    },
+    {
+      "path": "configuration_qwen.py",
+      "size": 2087,
+      "sha256": "8d37195dcafd46685204a9c73fdb5ebc2c3670de22ad8b8e488d137baa2850d9",
+      "storage": "git_blob"
+    },
+    {
+      "path": "generation_config.json",
+      "size": 221,
+      "sha256": "e37532acbbe928802c69c9ba530aa45e04a5b2db7bbdc4b3b89ff90f4bf951b7",
+      "storage": "git_blob"
+    },
+    {
+      "path": "model-00001-of-00010.safetensors",
+      "size": 1963443896,
+      "sha256": "8ff69467ff9f3bc3402bb297b7b4ceb4f27fbee0c111825601c71a5b83713b15",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00002-of-00010.safetensors",
+      "size": 2023960808,
+      "sha256": "cf5cd339ab1ac4a4c19708300ca26a93f530f56e004af61736a2f3bd7e9c4c82",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00003-of-00010.safetensors",
+      "size": 2023960816,
+      "sha256": "77c36ca0f2eaf4e43119923072e54e555bd4762a6cc16d7800e7eb05854b6fd2",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00004-of-00010.safetensors",
+      "size": 2023960848,
+      "sha256": "1adf7e90a9bf7fca18ef61eeab64c4de337e96fca4ecc307ccb6b88816b8a594",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00005-of-00010.safetensors",
+      "size": 2023960848,
+      "sha256": "4637965e0f5329a558af25e3de5198779020ffe14484dea3123e10087f81945e",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00006-of-00010.safetensors",
+      "size": 2023960848,
+      "sha256": "3fffd0b5fd549b9b9871d685aa5e82d6b33f454d957fc7d160cc8cf062504c23",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00007-of-00010.safetensors",
+      "size": 2023960848,
+      "sha256": "66ce3ecc1789fbc4c9acbbbd6fa13b8526156ac0feadcf0e03cbddb4e58cbdd8",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00008-of-00010.safetensors",
+      "size": 2044696480,
+      "sha256": "707318bf40be16efd6d87a8fc58c86e42deacdb13c4616c40f50fce92b9c2046",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00009-of-00010.safetensors",
+      "size": 1916789392,
+      "sha256": "54e25732179f8ebcd2843e46a31520d655011535b306541b0a164b8c06396f88",
+      "storage": "lfs"
+    },
+    {
+      "path": "model-00010-of-00010.safetensors",
+      "size": 1244037248,
+      "sha256": "0353946b13dd330fdf9d51fb278b9ea9e5070493b2cf018f62e18e7a1cecdf2f",
+      "storage": "lfs"
+    },
+    {
+      "path": "model.safetensors.index.json",
+      "size": 79941,
+      "sha256": "2ea24368ee65949bbc10c0d1301201c023a3b889a503d07399c5eaa7227b3ee3",
+      "storage": "git_blob"
+    },
+    {
+      "path": "modeling_qwen.py",
+      "size": 44654,
+      "sha256": "879c605cd38599134300e0b637e636975baa0574a76c1ce42acbe67d99b56ce0",
+      "storage": "git_blob"
+    },
+    {
+      "path": "qwen.tiktoken",
+      "size": 2561218,
+      "sha256": "b2b1b8dfb5cc5f024bafc373121c6aba3f66f9a5a0269e243470a1de16a33186",
+      "storage": "git_blob"
+    },
+    {
+      "path": "qwen_generation_utils.py",
+      "size": 14873,
+      "sha256": "4d7b323726a0f1a3b96400fff2785f8dd5c5a913d9b612317b0f20c89917b4bd",
+      "storage": "git_blob"
+    },
+    {
+      "path": "special_tokens_map.json",
+      "size": 3,
+      "sha256": "ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
+      "storage": "git_blob"
+    },
+    {
+      "path": "tokenization_qwen.py",
+      "size": 21915,
+      "sha256": "e4e5da0023ec29d0fbf6784b1a14fc67424a48b5e19cbd36a049da86c4871d0b",
+      "storage": "git_blob"
+    },
+    {
+      "path": "tokenizer_config.json",
+      "size": 211,
+      "sha256": "01ac26e0a1485e615f7d15373384fdf00b74c5bd02b0a39f0c1a16a50f8e9cdb",
+      "storage": "git_blob"
+    },
+    {
+      "path": "visual.py",
+      "size": 14716,
+      "sha256": "ac81001596af4d14a5c212b8b947f328167d06aa7c3540286632833681f1440b",
+      "storage": "git_blob"
+    }
+  ]
+}

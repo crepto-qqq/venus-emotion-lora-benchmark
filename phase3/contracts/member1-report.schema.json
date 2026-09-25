@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.example/phase3/member1-report.schema.json",
+  "title": "Phase 3 Member 1 handoff report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "generated_at_utc", "member_id", "forward_passed", "backward_passed", "optimizer_step_performed", "adapter_saved", "member1_environment_ready", "technical_smoke_passed", "full_dataset_ready", "formal_training_authorized", "source_lock", "fixture", "multi_user", "inputs"],
+  "properties": {
+    "schema_version": {"const": 1}, "kind": {"const": "phase3_member1_handoff"},
+    "generated_at_utc": {"type": "string", "format": "date-time"}, "member_id": {"type": "string", "minLength": 1},
+    "forward_passed": {"type": "boolean"}, "backward_passed": {"type": "boolean"},
+    "optimizer_step_performed": {"const": false}, "adapter_saved": {"const": false},
+    "member1_environment_ready": {"type": "boolean"}, "technical_smoke_passed": {"type": "boolean"},
+    "full_dataset_ready": {"const": false}, "formal_training_authorized": {"const": false},
+    "source_lock": {
+      "type": "object", "additionalProperties": false,
+      "required": ["project_commit", "qwen_commit", "qwen_patch_sha256", "venus_commit", "model_repository", "model_revision", "model_snapshot_manifest_sha256"],
+      "properties": {
+        "project_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "qwen_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "qwen_patch_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "venus_commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "model_repository": {"type": "string", "minLength": 1},
+        "model_revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "model_snapshot_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "fixture": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "fixture_sha256", "fixture_manifest_sha256", "image_sha256", "dataset_record_sha256"],
+      "properties": {
+        "id": {"const": "contentment_05000"},
+        "fixture_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "fixture_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "image_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "dataset_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "multi_user": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "filesystem_lock_used", "member_scoped_layout", "shared_host_training_authorized"],
+      "properties": {
+        "status": {"const": "coordination_required"},
+        "filesystem_lock_used": {"const": true}, "member_scoped_layout": {"const": true},
+        "shared_host_training_authorized": {"const": false}
+      }
+    },
+    "inputs": {
+      "type": "object", "additionalProperties": false,
+      "required": ["preflight_report_sha256", "smoke_report_sha256", "environment_freeze_sha256"],
+      "properties": {
+        "preflight_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "smoke_report_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "environment_freeze_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    }
+  }
+}

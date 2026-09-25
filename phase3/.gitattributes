@@ -1,0 +1,10 @@
+.gitattributes text eol=lf
+*.sh text eol=lf
+*.py text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.patch text eol=lf
+# Unified-diff context blank lines use one literal prefix space. The applied
+# checkout is still checked strictly by fetch_upstream.sh.
+*.patch -whitespace

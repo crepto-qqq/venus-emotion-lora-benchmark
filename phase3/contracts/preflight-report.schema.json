@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.example/phase3/preflight-report.schema.json",
+  "title": "Phase 3 preflight report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "kind", "generated_at_utc", "mode", "passed", "checks"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "phase3_preflight"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "mode": {"enum": ["static", "runtime"]},
+    "passed": {"type": "boolean"},
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "status", "detail"],
+        "properties": {
+          "name": {"type": "string"},
+          "status": {"enum": ["pass", "fail", "skip"]},
+          "detail": {"type": "string"},
+          "observed": {}
+        }
+      }
+    }
+  }
+}
