@@ -5,10 +5,11 @@
 The following is a dated observation from the RunPod console on 2026-09-25. It
 is a starting point, not evidence that Phase 3 cloud setup is complete:
 
-- the account is personal and still offers **Convert to a Team Account**;
-- there is no existing Pod and no Network Volume;
-- Team conversion, one 120 GB Standard Network Volume, invitations for Members
-  2-6, a shared GPU Pod, and the real GPU acceptance are all pending.
+- the RunPod Team has been created, Member 1 is its `Admin`, and Member 1 is
+  currently its only member;
+- there is no Phase 3 Pod and no Network Volume;
+- one 120 GB Standard Network Volume, invitations for Members 2-6, a shared GPU
+  Pod, and the real GPU acceptance are all pending.
 
 Every compatible 48 GB-or-larger candidate checked on the deployment page --
 L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported `Out of capacity`. The
@@ -87,11 +88,12 @@ run as the standard shared handoff.
 
 ## Approval and provisioning sequence
 
-Team conversion changes account permissions, while volume creation and Pod
-deployment incur charges. Execute them only after Member 1 has reviewed the
-exact pending actions, current region, current prices, and approved budget and
-has confirmed them at action time. Do not change payment settings or add funds
-as part of this flow unless Member 1 separately authorizes that action.
+The Team conversion is complete. Member invitations and role changes alter
+account permissions, while volume creation and Pod deployment incur charges.
+Execute each pending action only after Member 1 has reviewed its exact scope,
+the current region and prices where relevant, and the approved budget, then
+confirmed it at action time. Do not change payment settings or add funds as
+part of this flow unless Member 1 separately authorizes that action.
 
 After that confirmation:
 
@@ -100,7 +102,8 @@ After that confirmation:
    storage page as a lead only; the final deployment page must show capacity.
 2. Record the exact GPU, region, displayed compute price, estimated storage
    price, and intended maximum runtime for review.
-3. Convert the account to a Team and assign Member 1 as Admin.
+3. Confirm the existing Team still lists Member 1 as Admin. This was complete
+   on 2026-09-25; do not create another Team.
 4. Create one 120 GB Standard Network Volume in the selected region and mount
    it at `/workspace` when deploying the single target Pod.
 5. Run bootstrap with `--download-model-if-missing`. It downloads only missing

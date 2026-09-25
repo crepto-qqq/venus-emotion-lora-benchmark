@@ -19,10 +19,11 @@ scope.
 
 The repository-side scripts, pins, schemas, and instructions are ready for
 review and local static checks. This does not make the cloud/runtime handoff
-complete. As observed on 2026-09-25, the RunPod account is personal and has no
-Pod or Network Volume. Team conversion, one 120 GB Standard Network Volume, a
-capacity-confirmed compatible GPU Pod, invitations for Members 2-6, and real
-GPU acceptance all remain pending runtime actions.
+complete. As observed on 2026-09-25, the RunPod Team has been created, Member 1
+is its Admin, and Member 1 is currently its only member. There is no Phase 3
+Pod or Network Volume. One 120 GB Standard Network Volume, a capacity-confirmed
+compatible GPU Pod, invitations for Members 2-6, and real GPU acceptance all
+remain pending runtime actions.
 
 On the same date, every compatible 48 GB-or-larger candidate checked on the
 deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
