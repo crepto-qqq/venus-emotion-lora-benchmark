@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "upstream": {
+    "repository": "https://github.com/cognitedata/Qwen-VL-finetune.git",
+    "commit": "efa37ba284d56192b246d9b4ed5d3668c1abd163",
+    "patch": "phase3/upstream/patches/qwen-vl-finetune-efa37ba-phase3.patch",
+    "patch_sha256": "be9e14a60f4f2189a108aa1f46a7384616bfdd527ca6c0a41a4c175a92172eba"
+  },
+  "venus_source": {
+    "repository": "https://github.com/PKU-ICST-MIPL/Venus_CVPR2026.git",
+    "commit": "44e2971b7fe41f88a88c7e0ed8bf4c85eeb0155f"
+  },
+  "model": {
+    "repository": "popo28/Venus-Q-Stage1",
+    "revision": "0f5c00c8d07ba889e9c5d12f828129dc322aae6a",
+    "weight_format": "safetensors",
+    "weight_shard_pattern": "model-*-of-00010.safetensors",
+    "weight_shard_count": 10,
+    "weight_shard_total_bytes": 19312732032,
+    "index_file": "model.safetensors.index.json",
+    "snapshot_manifest": "phase3/configs/model-snapshot-manifest.json",
+    "snapshot_manifest_sha256": "13dbd18f9848ecdb7520bfe48af2704149435f2895fc67593df31c7552405298",
+    "snapshot_file_count": 22,
+    "snapshot_total_bytes": 19315474586
+  }
+}
