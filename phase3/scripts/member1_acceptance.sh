@@ -108,6 +108,7 @@ mkdir -- "${REPORT_DIR}"
   --output "${FIXTURE_PATH}" \
   --manifest "${FIXTURE_MANIFEST}"
 
+cp -- "${FIXTURE_PATH}" "${REPORT_DIR}/technical-fixture.json"
 cp -- "${FIXTURE_MANIFEST}" "${REPORT_DIR}/technical-fixture-manifest.json"
 LC_ALL=C "${ENV_DIR}/bin/python" -m pip freeze --all \
   | sed '/^[[:space:]]*$/d' \
@@ -115,10 +116,10 @@ LC_ALL=C "${ENV_DIR}/bin/python" -m pip freeze --all \
   >"${REPORT_DIR}/environment.freeze.txt"
 
 {
-  printf '%s  %s\n' "$(sha256sum "${FIXTURE_PATH}" | awk '{print $1}')" \
-    '<runtime>/smoke/contentment_05000.json'
-  printf '%s  %s\n' "$(sha256sum "${FIXTURE_MANIFEST}" | awk '{print $1}')" \
-    '<runtime>/smoke/contentment_05000.manifest.json'
+  printf '%s  %s\n' "$(sha256sum "${REPORT_DIR}/technical-fixture.json" | awk '{print $1}')" \
+    'technical-fixture.json'
+  printf '%s  %s\n' "$(sha256sum "${REPORT_DIR}/technical-fixture-manifest.json" | awk '{print $1}')" \
+    'technical-fixture-manifest.json'
 } >"${REPORT_DIR}/fixture-artifacts.sha256"
 
 "${ENV_DIR}/bin/python" "${PROJECT_ROOT}/phase3/tools/smoke_backward.py" \
@@ -145,6 +146,7 @@ LC_ALL=C "${ENV_DIR}/bin/python" -m pip freeze --all \
   --input "${REPORT_DIR}/preflight-runtime.json" \
   --input "${REPORT_DIR}/smoke-backward.json" \
   --input "${REPORT_DIR}/member1-handoff.json" \
+  --input "${REPORT_DIR}/technical-fixture.json" \
   --input "${REPORT_DIR}/technical-fixture-manifest.json" \
   --input "${REPORT_DIR}/environment.freeze.txt" \
   --input "${REPORT_DIR}/fixture-artifacts.sha256" \
@@ -153,7 +155,7 @@ LC_ALL=C "${ENV_DIR}/bin/python" -m pip freeze --all \
 (
   cd -- "${REPORT_DIR}"
   sha256sum preflight-runtime.json smoke-backward.json member1-handoff.json \
-    technical-fixture-manifest.json environment.freeze.txt \
+    technical-fixture.json technical-fixture-manifest.json environment.freeze.txt \
     fixture-artifacts.sha256 checksums.json \
     >checksums.sha256
 )

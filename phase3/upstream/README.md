@@ -17,7 +17,11 @@ The patch makes three compatibility corrections:
 It intentionally leaves the upstream JSON-array conversation loader, training
 loop, optimizer, checkpoint behavior, QLoRA path, and default LoRA targets
 unchanged. The Member 1 smoke configuration is technical infrastructure only;
-Member 3 owns every formal training choice.
+Member 3 owns every formal training choice. The smoke verifies BF16 floating
+base parameters and BF16 input entering the PEFT wrapper while keeping the
+trainable LoRA adapter parameters in FP32. It expects exactly 128 matched target
+modules and 3,506,176 trainable parameters. These observations do not claim
+that every internal LoRA matrix operation runs in BF16.
 
 Verify the patch against a clean checkout:
 

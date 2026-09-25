@@ -49,6 +49,10 @@ def write_json_atomic(path: Path, value: Any) -> None:
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
             handle.write(payload)
+        # Reports and runtime metadata are shared between six trusted RunPod
+        # users.  mkstemp defaults to 0600, which would become unreadable to
+        # the other users after an acceptance bundle is sealed read-only.
+        os.chmod(temporary, 0o664)
         os.replace(temporary, path)
     finally:
         if os.path.exists(temporary):
@@ -153,6 +157,48 @@ def package_versions(names: Iterable[str]) -> dict[str, str]:
     return result
 
 
+def expected_model_provenance(model_lock: dict[str, Any]) -> dict[str, Any]:
+    """Return the one accepted on-disk identity marker for the Stage 1 model."""
+    expected = {
+        "schema_version": 1,
+        "repo_id": model_lock.get("repository"),
+        "revision": model_lock.get("revision"),
+        "weight_format": model_lock.get("weight_format"),
+        "snapshot_manifest_sha256": model_lock.get("snapshot_manifest_sha256"),
+    }
+    if (
+        not isinstance(expected["repo_id"], str)
+        or not expected["repo_id"]
+        or not isinstance(expected["revision"], str)
+        or not re.fullmatch(r"[0-9a-f]{40}", expected["revision"])
+        or not isinstance(expected["weight_format"], str)
+        or not expected["weight_format"]
+        or not isinstance(expected["snapshot_manifest_sha256"], str)
+        or not re.fullmatch(r"[0-9a-f]{64}", expected["snapshot_manifest_sha256"])
+    ):
+        raise ValueError("source lock contains invalid model provenance fields")
+    return expected
+
+
+def verify_model_provenance(
+    model_path: Path, model_lock: dict[str, Any]
+) -> dict[str, Any]:
+    """Require the exact provenance marker created after full snapshot hashing."""
+    marker_path = model_path / "VENUS_MODEL_SOURCE.json"
+    if marker_path.is_symlink() or not marker_path.is_file():
+        raise ValueError(
+            "model provenance marker is missing or is not a regular non-symlink file"
+        )
+    observed = read_json(marker_path)
+    expected = expected_model_provenance(model_lock)
+    if observed != expected:
+        raise ValueError("model provenance marker differs from source-lock.json")
+    return {
+        **expected,
+        "marker_sha256": sha256_file(marker_path),
+    }
+
+
 def verify_snapshot_manifest(
     model_path: Path,
     manifest_path: Path,
@@ -196,8 +242,10 @@ def verify_snapshot_manifest(
             raise ValueError("model snapshot manifest contains an invalid file entry")
         seen.add(name)
         path = model_path / name
-        if not path.is_file():
-            raise ValueError(f"pinned model file is missing: {name}")
+        if path.is_symlink() or not path.is_file():
+            raise ValueError(
+                f"pinned model file is missing or is not a regular non-symlink file: {name}"
+            )
         observed_size = path.stat().st_size
         if observed_size != expected_size:
             raise ValueError(f"pinned model file size differs: {name}")

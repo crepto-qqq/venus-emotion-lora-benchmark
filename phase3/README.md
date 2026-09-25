@@ -19,11 +19,16 @@ scope.
 
 The repository-side scripts, pins, schemas, and instructions are ready for
 review and local static checks. This does not make the cloud/runtime handoff
-complete. As observed on 2026-09-23, the RunPod account still had two stopped
-legacy A40 Pods, each with its own 120 GB Pod Volume Disk, and no Network
-Volume. The planned normal Team, 120 GB Standard Network Volume, shared Secure
-Cloud Pod, data migration, team invitations, and real GPU acceptance remain
-pending runtime actions.
+complete. As observed on 2026-09-25, the RunPod account is personal and has no
+Pod or Network Volume. Team conversion, one 120 GB Standard Network Volume, a
+capacity-confirmed compatible GPU Pod, invitations for Members 2-6, and real
+GPU acceptance all remain pending runtime actions.
+
+On the same date, every compatible 48 GB-or-larger candidate checked on the
+deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
+`Out of capacity`. The A100 PCIe listing showed a USD 1.59/hour baseline.
+These values are dated observations, not a reservation or a claim of current
+availability; capacity and price must be checked again before provisioning.
 
 ## Pinned inputs
 
@@ -34,8 +39,11 @@ pending runtime actions.
 | Reviewed Qwen compatibility patch | SHA-256 `be9e14a60f4f2189a108aa1f46a7384616bfdd527ca6c0a41a4c175a92172eba` |
 | `popo28/Venus-Q-Stage1` | `0f5c00c8d07ba889e9c5d12f828129dc322aae6a` |
 
-The existing model snapshot is reused read-only at
-`/workspace/models/Venus-Q-Stage1`; it is never copied into Git.
+The exact model snapshot lives read-only at
+`/workspace/models/Venus-Q-Stage1`; it is never copied into Git. Bootstrap can
+download missing files directly from the pinned Hugging Face revision, verify
+all 22 locked files and their hashes, write exact provenance, and remove write
+bits from the snapshot, marker, and model root.
 
 ## One-command entry points
 
@@ -50,7 +58,8 @@ standard runtime and model paths.
 bash phase3/scripts/bootstrap.sh \
   --member-id member1 \
   --workspace-root /workspace/phase3 \
-  --model-path /workspace/models/Venus-Q-Stage1
+  --model-path /workspace/models/Venus-Q-Stage1 \
+  --download-model-if-missing
 ```
 
 After the real `contentment_05000` image is present, use a new attempt number:
@@ -83,11 +92,14 @@ access evidence outside Git.
 - [`docs/MEMBER1_HANDOFF.md`](docs/MEMBER1_HANDOFF.md) defines the ownership
   boundary and the evidence later members may rely on.
 - [`docs/RUNPOD_TEAM_SETUP.md`](docs/RUNPOD_TEAM_SETUP.md) records the current
-  cloud state and the planned multi-account migration.
+  cloud state and the planned multi-account provisioning.
 - [`docs/TRAINING_INPUT_CONTRACT.md`](docs/TRAINING_INPUT_CONTRACT.md) records
   the upstream conversation shape and why the full dataset is not yet ready.
 
 The one-record fixture proves only that the controlled stack can consume a real
-image and complete BF16 forward/backward. The fixture manifest, aggregate
-handoff report, and handoff verification report deliberately retain
-`full_dataset_ready: false` and `formal_training_authorized: false`.
+image and complete forward/backward with BF16 floating base parameters, BF16
+input entering the PEFT wrapper, and FP32 trainable LoRA adapter parameters. It
+does not assert that every internal LoRA matrix operation executes in BF16. The
+fixture manifest, aggregate handoff report, and handoff verification report
+deliberately retain `full_dataset_ready: false` and
+`formal_training_authorized: false`.

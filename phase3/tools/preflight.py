@@ -22,6 +22,7 @@ from common import (
     sha256_file,
     utc_now,
     verify_exact_git_patch,
+    verify_model_provenance,
     verify_snapshot_manifest,
     write_json_atomic,
 )
@@ -34,6 +35,7 @@ REQUIRED_PHASE3_FILES = (
     "configs/model-snapshot-manifest.json",
     "configs/source-lock.json",
     "contracts/member1-report.schema.json",
+    "contracts/model-snapshot-report.schema.json",
     "contracts/handoff-verification.schema.json",
     "contracts/preflight-report.schema.json",
     "contracts/smoke-report.schema.json",
@@ -41,8 +43,19 @@ REQUIRED_PHASE3_FILES = (
     "environment/python-version.txt",
     "environment/requirements.txt",
     "environment/constraints-runpod-cu118.txt",
+    "tools/prepare_model_snapshot.py",
     "upstream/patches/qwen-vl-finetune-efa37ba-phase3.patch",
 )
+
+
+def _gpu_memory_gate(
+    total_bytes: int,
+    free_bytes: int,
+    minimum_total_bytes: int,
+    minimum_free_bytes: int,
+) -> bool:
+    """Pure boundary predicate used by runtime preflight and its unit test."""
+    return total_bytes >= minimum_total_bytes and free_bytes >= minimum_free_bytes
 
 
 @dataclass
@@ -124,6 +137,7 @@ def _static_checks(project_root: Path) -> list[Check]:
             phase3 / "configs/model-snapshot-manifest.json",
             phase3 / "configs/source-lock.json",
             phase3 / "contracts/member1-report.schema.json",
+            phase3 / "contracts/model-snapshot-report.schema.json",
             phase3 / "contracts/handoff-verification.schema.json",
             phase3 / "contracts/preflight-report.schema.json",
             phase3 / "contracts/smoke-report.schema.json",
@@ -258,35 +272,6 @@ def _nearest_existing(path: Path) -> Path:
     return candidate
 
 
-def _read_model_provenance(model_path: Path) -> dict[str, Any] | None:
-    venus_marker = model_path / "VENUS_MODEL_SOURCE.json"
-    if venus_marker.is_file():
-        value = read_json(venus_marker)
-        if isinstance(value, dict):
-            return value
-    for marker_name in (
-        ".phase3-model-provenance.json",
-        "phase3-model-provenance.json",
-        "model-provenance.json",
-    ):
-        marker = model_path / marker_name
-        if marker.is_file():
-            value = read_json(marker)
-            if isinstance(value, dict) and isinstance(value.get("revision"), str):
-                return value
-    resolved_parts = model_path.resolve().parts
-    if "snapshots" in resolved_parts:
-        position = resolved_parts.index("snapshots")
-        if position + 1 < len(resolved_parts):
-            return {"revision": resolved_parts[position + 1]}
-    if (model_path / ".git").exists():
-        try:
-            return {"revision": git_output(model_path, "rev-parse", "HEAD")}
-        except (OSError, subprocess.SubprocessError):
-            return None
-    return None
-
-
 def _requirement_pins(requirements_path: Path) -> dict[str, str]:
     pins: dict[str, str] = {}
     for raw_line in requirements_path.read_text(encoding="utf-8").splitlines():
@@ -344,19 +329,9 @@ def _runtime_checks(
     _run_check(checks, "venus_upstream", venus_check)
 
     def model_revision_check() -> tuple[bool, str, Any]:
-        provenance = _read_model_provenance(model_path)
         model_lock = source_lock["model"]
-        observed = {
-            "repository": (provenance or {}).get("repo_id", (provenance or {}).get("repository")),
-            "revision": (provenance or {}).get("revision"),
-            "weight_format": (provenance or {}).get("weight_format"),
-        }
-        expected = {
-            "repository": model_lock["repository"],
-            "revision": model_lock["revision"],
-            "weight_format": model_lock["weight_format"],
-        }
-        return observed == expected, "model source provenance matches repository, revision, and format locks", observed
+        observed = verify_model_provenance(model_path, model_lock)
+        return True, "model source provenance exactly matches the source lock", observed
 
     _run_check(checks, "model_revision", model_revision_check)
 
@@ -443,27 +418,47 @@ def _runtime_checks(
     def cuda_check() -> tuple[bool, str, Any]:
         import torch
 
+        minimum_total = int(smoke_config["runtime"]["minimum_gpu_memory_bytes"])
+        minimum_free = int(
+            smoke_config["runtime"]["minimum_free_gpu_memory_bytes"]
+        )
         available = bool(torch.cuda.is_available())
         if not available:
-            return False, "CUDA is available and the selected GPU supports BF16", {
+            return False, "CUDA, BF16, and total/free GPU memory meet the runtime gate", {
                 "cuda_available": False,
                 "bf16_supported": False,
                 "device_count": 0,
+                "total_memory_bytes": 0,
+                "free_memory_bytes": 0,
+                "minimum_total_memory_bytes": minimum_total,
+                "minimum_free_memory_bytes": minimum_free,
             }
         index = torch.cuda.current_device()
+        torch.cuda.empty_cache()
         properties = torch.cuda.get_device_properties(index)
+        free_memory, total_memory = torch.cuda.mem_get_info(index)
         bf16_supported = bool(torch.cuda.is_bf16_supported())
         observed = {
             "cuda_available": True,
             "bf16_supported": bf16_supported,
             "device_count": torch.cuda.device_count(),
             "device_name": properties.name,
-            "total_memory_bytes": int(properties.total_memory),
+            "total_memory_bytes": int(total_memory),
+            "free_memory_bytes": int(free_memory),
+            "minimum_total_memory_bytes": minimum_total,
+            "minimum_free_memory_bytes": minimum_free,
         }
-        enough_memory = int(properties.total_memory) >= int(
-            smoke_config["runtime"]["minimum_gpu_memory_bytes"]
+        enough_memory = _gpu_memory_gate(
+            int(total_memory),
+            int(free_memory),
+            minimum_total,
+            minimum_free,
         )
-        return bf16_supported and enough_memory, "CUDA is available and the selected GPU supports BF16", observed
+        return (
+            bf16_supported and enough_memory,
+            "CUDA, BF16, and total/free GPU memory meet the runtime gate",
+            observed,
+        )
 
     _run_check(checks, "cuda_bf16_gpu", cuda_check)
 

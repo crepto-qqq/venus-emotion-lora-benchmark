@@ -2,32 +2,28 @@
 
 ## Recorded state before Phase 3 provisioning
 
-The following is a dated observation from the RunPod console on 2026-09-23. It
-is a starting point, not a statement that Phase 3 cloud setup is complete:
+The following is a dated observation from the RunPod console on 2026-09-25. It
+is a starting point, not evidence that Phase 3 cloud setup is complete:
 
-- the account is still personal and offers **Convert to a Team Account**;
-- two legacy A40 Pods are stopped;
-- each stopped Pod has its own 120 GB Pod Volume Disk mounted at
-  `/workspace`;
-- the two disks are separate and neither is a portable Network Volume;
-- the Network Storage page contains no Network Volume;
-- the console showed approximately USD 0.03/hour storage for each legacy Pod
-  disk and a combined account spend rate of about USD 0.067/hour;
-- starting a legacy A40 Pod showed USD 0.49/hour at the time of inspection.
+- the account is personal and still offers **Convert to a Team Account**;
+- there is no existing Pod and no Network Volume;
+- Team conversion, one 120 GB Standard Network Volume, invitations for Members
+  2-6, a shared GPU Pod, and the real GPU acceptance are all pending.
 
-Prices and capacity must be checked again immediately before any paid action.
-No Team conversion, Network Volume creation, legacy Pod start, migration, or
-new Pod deployment is asserted by this document. Keep both stopped Pods and
-their disks until migration evidence is reviewed; deleting either one is a
-separate destructive action.
+Every compatible 48 GB-or-larger candidate checked on the deployment page --
+L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported `Out of capacity`. The
+A100 PCIe listing showed a USD 1.59/hour baseline. No GPU type, region,
+capacity, or price is reserved by this observation. Check the deployment page
+again immediately before creating the region-bound volume or starting compute.
 
 ## Target account and role policy
 
 Use a normal RunPod Team. Member 1 receives the `Admin` role and Members 2-6
-receive `Dev` roles. Every person uses an individual RunPod account and an
-individual SSH public key. Members may be invited after Member 1 prepares the
-environment; invitation acceptance and a separate-account verification must
-still finish before the handoff is called shared.
+receive `Dev` roles, so all six members can access the shared project through
+their own accounts. Every member uses an individual RunPod account and an
+individual SSH public key. Members 2-6 may be invited after Member 1 prepares
+the environment; invitation acceptance and a separate-account verification
+must still finish before the handoff is called shared.
 
 Follow RunPod's current guidance:
 <https://docs.runpod.io/accounts-billing/manage-accounts>. An invitation link
@@ -42,10 +38,14 @@ are not isolation between hostile users.
 ## Target compute and storage
 
 Create one **120 GB Standard Network Volume** in Secure Cloud and mount it at
-`/workspace` on one **on-demand Secure Cloud Pod** with at least **48 GB of GPU
-memory**. Select the lowest currently available price among the approved
-48 GB class, such as A40, RTX A6000, or L40, after checking framework and BF16
-support. Do not create six Pods or six volumes.
+`/workspace` on one **on-demand Secure Cloud Pod**. The technical acceptance
+enforces at least **44 GiB total GPU memory** and at least **40 GiB free GPU
+memory immediately before model loading**. In practice, select a compatible
+48 GB-or-larger GPU only after confirming current deployment capacity, the
+displayed hourly price, CUDA 11.8/PyTorch 2.0.1 compatibility, and BF16 support.
+Potential compatible families include A40, RTX A6000, L40S, and A100; this list
+does not claim that any one of them is currently available. Do not create six
+Pods or six volumes.
 
 At the documented Standard rate of USD 0.07/GB/month, 120 GB is approximately
 USD 8.40/month before taxes or policy changes. Pod compute is billed separately
@@ -85,39 +85,40 @@ These `/workspace` locations are the standard handoff paths. CLI path overrides
 are reserved for isolated tests or recovery and do not qualify an acceptance
 run as the standard shared handoff.
 
-## Approval and migration sequence
+## Approval and provisioning sequence
 
-Team conversion changes account permissions, while volume creation, adding
-funds, starting an old Pod, and deploying a new Pod incur charges. Execute them
-only after the user has reviewed the exact pending actions, current prices, and
-funding amount and has confirmed them at action time.
+Team conversion changes account permissions, while volume creation and Pod
+deployment incur charges. Execute them only after Member 1 has reviewed the
+exact pending actions, current region, current prices, and approved budget and
+has confirmed them at action time. Do not change payment settings or add funds
+as part of this flow unless Member 1 separately authorizes that action.
 
 After that confirmation:
 
-1. Convert the account to a Team and assign Member 1 as Admin.
-2. Create the 120 GB Standard Network Volume in a location with an approved
-   48 GB GPU available.
-3. Start one legacy A40 Pod only after identifying which of its separate Pod
-   Volume Disks contains the authoritative Stage 1 model and fixture source.
-4. Deploy the target Pod with the Network Volume attached at deployment time;
-   RunPod does not attach a new Network Volume to an already-created legacy
-   Pod. Copy from the running source Pod to the target Pod with an authenticated
-   `rsync` transfer, or transfer through RunPod's S3-compatible Network Volume
-   API. Copy only the pinned model, required technical fixture source, and other
-   explicitly retained project inputs.
-5. Verify the model repository revision
-   `0f5c00c8d07ba889e9c5d12f828129dc322aae6a`, ten safetensor shards,
-   19,312,732,032 total shard bytes, index file, and fixture image SHA-256
-   `f4552a57efd8ff17e0a7a9fe28e1e94e98401cc5a5ace21ee6c246d74766d082`.
-6. Stop the legacy Pod immediately after the copy and verification.
-7. Deploy one target Pod with the Network Volume at `/workspace`, add only
-   Member 1's public key initially, and run bootstrap and acceptance.
+1. Find one region that simultaneously offers a 120 GB Standard Network Volume
+   and actual deployment capacity for a compatible GPU. Treat `Low` on the
+   storage page as a lead only; the final deployment page must show capacity.
+2. Record the exact GPU, region, displayed compute price, estimated storage
+   price, and intended maximum runtime for review.
+3. Convert the account to a Team and assign Member 1 as Admin.
+4. Create one 120 GB Standard Network Volume in the selected region and mount
+   it at `/workspace` when deploying the single target Pod.
+5. Run bootstrap with `--download-model-if-missing`. It downloads only missing
+   files from the pinned `popo28/Venus-Q-Stage1` revision into
+   `/workspace/models/Venus-Q-Stage1`, using
+   `/workspace/phase3/cache/huggingface` as the persistent cache.
+6. Verify the full 22-file snapshot: revision
+   `0f5c00c8d07ba889e9c5d12f828129dc322aae6a`, manifest SHA-256
+   `13dbd18f9848ecdb7520bfe48af2704149435f2895fc67593df31c7552405298`,
+   19,315,474,586 total bytes, ten safetensor shards totaling 19,312,732,032
+   bytes, and exact per-file hashes. Bootstrap writes `VENUS_MODEL_SOURCE.json`
+   and verifies that every pinned file, the marker, and model root are
+   read-only.
+7. Run the Member 1 technical acceptance and Member 1 clean-shell verification.
 8. Invite Members 2-6 as Dev. Each member registers their own public key.
 9. Member 2 performs the separate-account verification, then Member 1 stops the
-   target GPU Pod.
-
-Do not delete either legacy Pod or disk during this sequence. Migration and
-deletion have different acceptance criteria.
+   target GPU Pod and verifies the stopped state. Retain the shared volume for
+   the later Phase 3 work.
 
 ## One-writer rule
 
@@ -135,9 +136,12 @@ those Member 1 wrappers while the writer lock is held.
 
 Other members may read the model, environment, sources, and Member 1 report
 while writing only to their own paths. `verify_handoff.sh` does not take the
-shared writer lock, does not rerun the GPU smoke, and proves that the source
-attempt was unchanged while creating a result below the caller's own report
-directory.
+shared writer lock or rerun the GPU smoke. It accepts only a flat immutable
+bundle of real regular files, checks the complete fixture and checksum chain,
+snapshots the source attempt before and after validation, and writes a sealed
+result below the caller's own report directory. A failure receives a stable
+`failure_code` and preserves any checks completed before the failure whenever
+the caller-owned output can be created.
 
 The verifier checks the bundle and filesystem behavior under the supplied
 `--member-id`; it cannot determine which RunPod account or SSH key owns the
@@ -163,9 +167,8 @@ Set an approximately six-hour auto-stop or equivalent timer for the Member 1
 GPU window. Confirm the console state after stopping; closing SSH does not stop
 the Pod.
 
-The two legacy Pod disks continue to incur storage charges while retained.
-Review them after successful migration, but do not remove them as part of
-Member 1's automated setup. The new Network Volume is working storage, not the
-only backup. Push source and redacted reports to Git, and copy irreplaceable
-private evidence to a separate access-controlled team location. Model files and
-caches remain replaceable from their pinned sources.
+The Network Volume is working storage, not the only backup. Push source and
+redacted reports to Git, and copy irreplaceable private evidence to a separate
+access-controlled team location. Model files and caches remain replaceable from
+their pinned sources. Recheck the approved spending limit before each compute
+window.
