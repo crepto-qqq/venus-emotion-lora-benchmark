@@ -17,19 +17,32 @@ scope.
 
 ## Current status
 
-The repository-side scripts, pins, schemas, and instructions are ready for
-review and local static checks. This does not make the cloud/runtime handoff
-complete. As observed on 2026-09-25, the RunPod Team has been created, Member 1
-is its Admin, and Member 1 is currently its only member. There is no Phase 3
-Pod or Network Volume. One 120 GB Standard Network Volume, a capacity-confirmed
-compatible GPU Pod, invitations for Members 2-6, and real GPU acceptance all
-remain pending runtime actions.
+Member 1's technical environment and GPU acceptance completed on 2026-09-25:
 
-On the same date, every compatible 48 GB-or-larger candidate checked on the
-deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
-`Out of capacity`. The A100 PCIe listing showed a USD 1.59/hour baseline.
-These values are dated observations, not a reservation or a claim of current
-availability; capacity and price must be checked again before provisioning.
+- the shared 120 GB Standard Network Volume `phase3-shared-120gb`
+  (`bk4fycduml`) is retained in `US-NE-1`; it was mounted at `/workspace` for
+  acceptance and must use that mount point on future Pods;
+- `/workspace/phase3/envs/venus-phase3` contains Python 3.10.13 and
+  PyTorch 2.0.1+cu118, and the exact upstream sources and model snapshot were
+  verified and sealed read-only;
+- H100 NVL `attempt-001` completed one real-image forward/backward pass and
+  passed every runtime gate, with no optimizer step and no adapter save;
+- Member 1 clean-shell verification and a second verification from a
+  replacement Pod attached to the retained volume both passed; and
+- every temporary Pod is stopped, so only the Network Volume continues to
+  incur charges.
+
+The accepted runtime and evidence are pinned to project commit
+`ea2dace2026523b6a498d634301927ddc335e015`. The observed compute spend was
+approximately USD 1.39, and the retained volume is approximately USD 8.40 per
+month at the recorded rate. Prices and future GPU capacity must be checked
+again before another Pod is started.
+
+Member 1's technical environment handoff is complete. Invitations for Members
+2-6 and independent cross-account identity verification are deliberately
+deferred, so six-account/shared-access completion is not claimed. The reports
+continue to record `full_dataset_ready: false` and
+`formal_training_authorized: false`.
 
 ## Pinned inputs
 
@@ -46,14 +59,15 @@ download missing files directly from the pinned Hugging Face revision, verify
 all 22 locked files and their hashes, write exact provenance, and remove write
 bits from the snapshot, marker, and model root.
 
-## One-command entry points
+## Reproduction and later verification entry points
 
-Run these commands from a clean SSH login shell at the repository root on the
-selected RunPod host. The standard handoff uses `/workspace/phase3` as its
-runtime root and `/workspace/phase3/envs/venus-phase3` as its shared
-environment. Low-level CLI path overrides are for isolated tests or recovery
-only. The formal acceptance and handoff-verification wrappers enforce the
-standard runtime and model paths.
+The following commands are retained for recovery, reproduction, or a later
+acceptance attempt. They are not instructions to create another volume or
+rerun the already-passing `attempt-001`. Run them from a clean SSH login shell
+at the repository root on a Pod that mounts the retained volume. The standard
+handoff uses `/workspace/phase3` as its runtime root and
+`/workspace/phase3/envs/venus-phase3` as its shared environment. Low-level CLI
+path overrides are for isolated tests or recovery only.
 
 ```bash
 bash phase3/scripts/bootstrap.sh \
@@ -63,19 +77,27 @@ bash phase3/scripts/bootstrap.sh \
   --download-model-if-missing
 ```
 
-After the real `contentment_05000` image is present, use a new attempt number:
+If a rerun is justified, preserve `attempt-001` and use a new attempt number:
 
 ```bash
 bash phase3/scripts/member1_acceptance.sh \
   --member-id member1 \
   --image /workspace/phase3/smoke/contentment_05000.jpg \
-  --report-dir /workspace/phase3/reports/member1/attempt-001
+  --report-dir /workspace/phase3/reports/member1/attempt-002
 ```
 
-Verification reads that immutable attempt, does not rerun the smoke, and writes
-a new report below the caller's own report directory:
+The existing immutable attempt records commit `ea2dace`. Verification of that
+attempt must run from a clean checkout of exactly that commit; later handoff
+maintenance commits do not replace the recorded runtime source. The verifier
+reads the attempt without rerunning the smoke and writes a new report below the
+caller's own report directory:
 
 ```bash
+git clone --no-checkout "$(git remote get-url origin)" \
+  /workspace/phase3/members/member2/member1-acceptance
+git -C /workspace/phase3/members/member2/member1-acceptance \
+  switch --detach ea2dace2026523b6a498d634301927ddc335e015
+cd /workspace/phase3/members/member2/member1-acceptance
 bash phase3/scripts/verify_handoff.sh \
   --member-id member2 \
   --report-dir /workspace/phase3/reports/member1/attempt-001
@@ -96,6 +118,10 @@ access evidence outside Git.
   cloud state and the planned multi-account provisioning.
 - [`docs/TRAINING_INPUT_CONTRACT.md`](docs/TRAINING_INPUT_CONTRACT.md) records
   the upstream conversation shape and why the full dataset is not yet ready.
+- [`docs/EXPERIMENT_RECORD_TEMPLATE.md`](docs/EXPERIMENT_RECORD_TEMPLATE.md)
+  gives later training owners one consistent experiment record.
+- [`docs/TEAM_HANDOFF_CHECKLIST.md`](docs/TEAM_HANDOFF_CHECKLIST.md) lists the
+  checks every member should complete before using or handing off shared work.
 
 The one-record fixture proves only that the controlled stack can consume a real
 image and complete forward/backward with BF16 floating base parameters, BF16

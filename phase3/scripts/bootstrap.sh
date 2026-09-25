@@ -126,4 +126,4 @@ fi
 )
 
 printf 'Bootstrap complete. Static evidence: %s\n' "${BOOTSTRAP_REPORT_DIR}"
-printf 'GPU acceptance has not run; use member1_acceptance.sh on the selected 48 GB GPU.\n'
+printf 'Bootstrap does not run or alter GPU acceptance evidence.\n'

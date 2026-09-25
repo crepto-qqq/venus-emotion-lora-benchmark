@@ -20,15 +20,17 @@ stay under `phase3/`.
 
 Use the target setup in [`RUNPOD_TEAM_SETUP.md`](RUNPOD_TEAM_SETUP.md): a
 normal RunPod Team, one on-demand Secure Cloud Pod with at least 48 GB GPU
-memory, and one 120 GB Standard Network Volume mounted at `/workspace`. That
-target is partially ready as of 2026-09-25: the Team exists, Member 1 is its
-Admin, and Member 1 is currently its only member. There is no Phase 3 Pod or
-Network Volume. Every compatible 48 GB-or-larger candidate checked on the
-deployment page -- L40S, A40, RTX A6000, and A100 PCIe 80 GB -- reported
-`Out of capacity`. The A100 PCIe listing showed a USD 1.59/hour baseline.
-Recheck capacity and price before any paid action. Do not run acceptance until
-the exact model snapshot and fixture image have been prepared and verified on
-the target volume.
+memory, and one 120 GB Standard Network Volume mounted at `/workspace`. This
+technical target completed on 2026-09-25. The retained volume is
+`phase3-shared-120gb` (`bk4fycduml`) in `US-NE-1`; the shared environment,
+exact model snapshot, and fixture are present and verified. H100 NVL
+`attempt-001` and both Member 1 verification passes succeeded at project commit
+`ea2dace2026523b6a498d634301927ddc335e015`. All temporary Pods are stopped.
+
+Members 2-6 have not yet been invited, and no separate-account identity check
+is claimed. Before starting any future Pod, recheck capacity and price, mount
+the existing volume, and use an automatic stop limit. Do not create a second
+Phase 3 volume.
 
 These inputs are fixed:
 
@@ -64,9 +66,10 @@ both upstream checkouts as shared read-only inputs after bootstrap. Members may
 write only to their own `members/<id>`, `runs/<id>`, and `reports/<id>`
 paths.
 
-## Step 1: provision the shared runtime
+## Step 1: reuse the completed shared runtime
 
-After the remaining RunPod resource and billing actions are explicitly approved:
+Initial provisioning and technical acceptance are complete. For recovery or a
+later approved compute window:
 
 1. Recheck the deployment page for a compatible GPU with actual capacity. The
    smoke requires at least 44 GiB total GPU memory and 40 GiB free immediately
@@ -75,12 +78,11 @@ After the remaining RunPod resource and billing actions are explicitly approved:
    intended maximum runtime for review.
 3. Confirm the existing Team still lists Member 1 as Admin. This was complete
    on 2026-09-25; do not create another Team.
-4. Create one 120 GB Standard Network Volume in that same Secure Cloud region.
-5. Deploy one Pod with the volume mounted at `/workspace`. Do not create a Pod
-   or volume per member.
-6. Use the locked bootstrap download described below. There is no existing Pod
-   or disk to copy; the authoritative model source is the pinned Hugging Face
-   revision.
+4. Reuse `phase3-shared-120gb` in `US-NE-1`. Do not create another volume.
+5. Deploy at most one approved Pod with that volume mounted at `/workspace` and
+   configure an automatic stop limit.
+6. Run bootstrap only to verify or repair the retained runtime. It downloads
+   only missing files from the pinned Hugging Face revision.
 
 ## Step 2: bootstrap from a clean shell
 
@@ -138,15 +140,16 @@ annotation, and image hashes, checks available Eval20/Eval80 exclusion evidence,
 and emits the one-sample upstream JSON array plus its sidecar manifest. It does
 not convert the complete 480-record snapshot.
 
-## Step 4: run one GPU acceptance attempt
+## Step 4: reproduce the GPU acceptance only when required
 
-Use a directory that does not exist yet. Never reuse an attempt number:
+`attempt-001` already passed and is immutable. Any justified rerun must use a
+directory that does not exist, starting with `attempt-002`:
 
 ```bash
 bash phase3/scripts/member1_acceptance.sh \
   --member-id member1 \
   --image /workspace/phase3/smoke/contentment_05000.jpg \
-  --report-dir /workspace/phase3/reports/member1/attempt-001
+  --report-dir /workspace/phase3/reports/member1/attempt-002
 ```
 
 The command takes the shared writer lock and then runs:
@@ -182,20 +185,26 @@ pass. It also requires `optimizer_step_performed: false`,
 `formal_training_authorized: false`. A passing report establishes runtime
 viability only.
 
-## Step 5: verify from clean and separate accounts
+## Step 5: preserve completed verification and defer account onboarding
 
-Member 1 first disconnects, opens a new SSH login shell, and runs:
+Member 1 clean-shell verification and a second verification from a replacement
+Pod attached to the retained volume both passed. Their reports are stored at:
 
-```bash
-bash phase3/scripts/verify_handoff.sh \
-  --member-id member1 \
-  --report-dir /workspace/phase3/reports/member1/attempt-001
+```text
+/workspace/phase3/reports/member1/verification-h100-001/
+/workspace/phase3/reports/member1/verification-shared-volume-001/
 ```
 
-After invitations are accepted, Member 2 repeats the command through their own
-RunPod account and SSH key:
+The immutable attempt records project commit `ea2dace`. A later verifier must
+use a clean checkout of exactly that commit. After invitations are accepted,
+Member 2 may run this through their own RunPod account and SSH key:
 
 ```bash
+git clone --no-checkout "$(git remote get-url origin)" \
+  /workspace/phase3/members/member2/member1-acceptance
+git -C /workspace/phase3/members/member2/member1-acceptance \
+  switch --detach ea2dace2026523b6a498d634301927ddc335e015
+cd /workspace/phase3/members/member2/member1-acceptance
 bash phase3/scripts/verify_handoff.sh \
   --member-id member2 \
   --report-dir /workspace/phase3/reports/member1/attempt-001
@@ -213,9 +222,9 @@ below `/workspace/phase3/reports/<caller>/`.
 
 The script validates filesystem behavior under the supplied `--member-id`; it
 does not authenticate the RunPod account or SSH key behind the shell. Calling
-the handoff cross-account complete also requires private Team invitation and
-SSH-login evidence for Member 2. The machine-readable status remains
-`coordination_required` because that identity evidence must stay outside Git.
+the handoff cross-account complete will require private Team invitation and
+SSH-login evidence for Member 2. That coordination step is currently deferred,
+and the machine-readable status remains `coordination_required`.
 
 ## Recovery
 
@@ -234,10 +243,11 @@ SSH-login evidence for Member 2. The machine-readable status remains
 - If either the 44 GiB total-memory gate or 40 GiB immediate free-memory gate
   fails, retain the failure report and stop. Do not change the technical test
   into a different experiment.
-- Stop the GPU Pod immediately after acceptance and cross-account verification.
-  Confirm the stopped state in the RunPod console.
+- Stop the GPU Pod immediately after technical acceptance and Member 1
+  verification. Do not keep an expensive GPU running while waiting for account
+  onboarding. Confirm the stopped state in the RunPod console.
 
-## Working-time estimate
+## Historical working-time estimate
 
 These are active-work estimates after account actions are approved and network
 access is available:
@@ -250,10 +260,10 @@ access is available:
 | Clean-shell and cross-account verification | 30-60 minutes |
 | Report review and handoff | 30-60 minutes |
 
-The expected active work is about 4.5-10.5 hours after approvals and deployable
-capacity exist. Allow one to two working days because a roughly 19.3 GB model
-download, full hashing, package downloads, invitation acceptance, or one retry
-can add elapsed time. GPU capacity can add an unbounded wait before that work
-starts. Repository scripts, pins, and evidence paths are shared and reviewable,
-so Members 2-6 are not blocked by Member 1's day-to-day availability after the
-handoff artifacts exist.
+This was the planning estimate for the now-completed Member 1 technical work.
+No further GPU work is required for Member 1. The only deferred Member 1
+coordination is inviting Members 2-6 and helping one member perform the
+separate-account access check; it does not require an H100 to remain running.
+Repository scripts, pins, and evidence paths are shared and reviewable, so
+Members 2-6 are not blocked by Member 1's day-to-day availability after account
+onboarding.
