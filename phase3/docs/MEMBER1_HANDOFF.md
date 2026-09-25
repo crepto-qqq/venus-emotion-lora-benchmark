@@ -2,9 +2,9 @@
 
 ## Completion boundary
 
-The repository-ready portion contains the branch, pins, reviewed patch,
-automation, schemas, and instructions. The complete Member 1 handoff additionally
-requires these runtime deliverables:
+Member 1's technical environment handoff contains the branch, pins, reviewed
+patch, automation, schemas, instructions, and these completed runtime
+deliverables:
 
 - branch `phase3member1-env`, based on `tlia0262` commit
   `869a24bb42b83f8b58c6f693a2cae6a84df5ae9d`;
@@ -43,31 +43,34 @@ shared read-only inputs.
 
 ## Repository state versus cloud acceptance
 
-The checked-in scripts, pins, schemas, and documentation are repository-side
-preparation. They are not evidence that RunPod provisioning or GPU acceptance
-has happened. As of 2026-09-25, the RunPod Team exists, Member 1 is its Admin,
-and Member 1 is currently its only member. There is no Phase 3 Pod or Network
-Volume. The 120 GB Network Volume, new shared Pod, invitations for Members 2-6,
-and real GPU reports remain runtime actions. Every compatible 48 GB-or-larger
-candidate checked on the deployment page -- L40S, A40, RTX A6000, and A100
-PCIe 80 GB -- reported `Out of capacity`. The A100 PCIe listing showed a
-USD 1.59/hour baseline. No GPU availability is claimed until the deployment
-page is checked again.
+Member 1 technical environment acceptance is complete as of 2026-09-25:
 
-The handoff becomes complete only when:
+1. the shared 120 GB Standard Network Volume `phase3-shared-120gb`
+   (`bk4fycduml`) is retained in `US-NE-1`; it was mounted at `/workspace` for
+   acceptance and must use that mount point on future Pods;
+2. bootstrap produced the shared Python 3.10.13/PyTorch 2.0.1+cu118
+   environment, exact upstream checkouts, and verified read-only model
+   snapshot;
+3. H100 NVL `attempt-001` at project commit
+   `ea2dace2026523b6a498d634301927ddc335e015` passed the real
+   `contentment_05000` forward/backward smoke, all memory and BF16 gates, and
+   the finite non-zero LoRA-gradient checks;
+4. the accepted report records zero optimizer steps, no adapter/checkpoint
+   save, `full_dataset_ready: false`, and
+   `formal_training_authorized: false`;
+5. Member 1 clean-shell verification and a second verification from a
+   replacement Pod attached to the retained volume both passed; and
+6. the temporary Pods were stopped after the evidence was copied to the
+   shared volume and checked.
 
-1. `bootstrap.sh` succeeds from a clean login shell on the target storage;
-2. `member1_acceptance.sh` produces a passing immutable attempt for the real
-   `contentment_05000` image;
-3. the report proves at least 44 GiB total and 40 GiB immediately free GPU
-   memory, BF16 floating base parameters, BF16 wrapper input, FP32 trainable
-   LoRA adapter parameters, finite loss, and a finite non-zero intended LoRA
-   gradient;
-4. it records zero optimizer steps, no adapter/checkpoint save, and
-   `full_dataset_ready: false` plus `formal_training_authorized: false`;
-5. Member 1 verifies from a fresh login and Member 2 verifies through a
-   separate RunPod account and SSH key;
-6. Member 1 reviews the redacted evidence and stops the GPU Pod.
+The observed compute spend was approximately USD 1.39. The retained volume is
+approximately USD 8.40 per month at the recorded rate. No running Pod is part
+of the handoff.
+
+Six-member account onboarding is a separate coordination gate. Invitations
+for Members 2-6 and verification through another member's own RunPod account
+and SSH key are deferred by the project owner. The technical environment is
+ready, but cross-account/shared-access completion is not claimed.
 
 ## Evidence later members may rely on
 
@@ -96,20 +99,36 @@ One immutable acceptance attempt:
   checksums.sha256
 ```
 
-Each handoff verification is timestamped below the caller's own report root,
-for example `/workspace/phase3/reports/member2/verification-*/`. Verification
-does not rewrite Member 1's attempt and does not execute the model. It checks a
-flat immutable bundle of regular files, validates both the fixture JSON and
-sidecar against the source locks, and compares before/after source snapshots.
-Success and failure outputs are sealed with checksums. A failure carries a
-stable `failure_code` and retains completed checks whenever possible.
+The completed verification evidence and portable private package are:
+
+```text
+/workspace/phase3/reports/member1/verification-h100-001/
+/workspace/phase3/reports/member1/verification-shared-volume-001/
+/workspace/phase3/reports/member1/packages/
+  member1-gpu-acceptance-reports.tar.gz
+```
+
+The package SHA-256 is
+`244d3f3d9bd417591fde3669f69eb31a3a94b49d495c7d856e50ad8587c47791`.
+The checked-in `phase3/reports/member1/attempt-001/README.md` is a redacted
+index; the private bundle on the shared volume remains authoritative.
+
+Each later handoff verification is written below the caller's own report root.
+The existing attempt records project commit `ea2dace`; verify it from a clean
+checkout of exactly that commit. Verification does not rewrite Member 1's
+attempt or execute the model. It checks a flat immutable bundle of regular
+files, validates the fixture JSON and sidecar against the source locks, and
+compares before/after source snapshots. Success and failure outputs are sealed
+with checksums. A failure carries a stable `failure_code` and retains completed
+checks whenever possible.
 
 The verifier proves that the bundle, pinned inputs, shared reads, and
 caller-owned write path work under the supplied `--member-id`. That text value
 does not authenticate the RunPod account or SSH key that opened the shell.
-Calling the handoff cross-account complete therefore also requires private
-evidence that Member 2 joined the Team and logged in with Member 2's own SSH
-key. Keep that identity evidence outside Git and outside redacted reports.
+Calling the handoff cross-account complete will require private evidence that
+Member 2 joined the Team and logged in with Member 2's own SSH key. That check
+is deferred. Keep future identity evidence outside Git and outside redacted
+reports.
 
 The passing aggregate report establishes technical environment viability only.
 Later owners must still complete the deterministic full-data converter, repair

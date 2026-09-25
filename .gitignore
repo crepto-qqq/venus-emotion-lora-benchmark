@@ -31,6 +31,10 @@ rng_state*.pth
 .DS_Store
 Thumbs.db
 
+# Local generated work products
+/tmp/
+/output/
+
 # Local EmoSet / annotation artifacts
 data/EmoSet-118K.zip
 data/datasets/raw/
