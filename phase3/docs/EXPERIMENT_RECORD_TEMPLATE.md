@@ -5,9 +5,11 @@ Store the completed record beside the run's Git-safe outputs. Do not put images,
 model weights, adapters, checkpoints, credentials, signed URLs, private host
 details, or raw logs in Git.
 
-This template does not authorize training. A training owner may use it only
-after the full dataset passes its release checks and the formal LoRA
-configuration is approved.
+This template does not authorize training. Member 3A uses it only after the
+full dataset passes its release checks. A paid pilot or formal run also
+requires the user's stage-specific GPU and budget decision. Member 3B is the
+internal reviewer: the pilot review authorizes the exact formal configuration,
+and no approval from another team member is required.
 
 ## Identity and ownership
 
@@ -16,6 +18,7 @@ configuration is approved.
 | Experiment ID | `phase3-YYYYMMDD-<member>-<purpose>-<attempt>` |
 | Owner | `<member-id>` |
 | Reviewer | `<member-id>` |
+| Run type | `pilot training / formal training / inference / formal Eval80 / API` |
 | Start/end time (UTC) | `<ISO-8601>` |
 | Purpose or hypothesis | `<one testable sentence>` |
 | Status | `planned / running / passed / failed / stopped` |
@@ -43,6 +46,13 @@ configuration is approved.
 | Displayed hourly price | `USD <value>/hour` |
 | Pod start/stop time (UTC) | `<ISO-8601>` |
 | Billed duration and cost | `<duration>` / `USD <value>` |
+| Cost class | `training / non-training` |
+| User budget decision reference | `<date and Git-safe summary, or not applicable>` |
+| Stage total budget | `USD <value>, or not applicable` |
+| Maximum hourly price | `USD <value>/hour, or not applicable` |
+| Wall-clock / attempt limits | `<values, or not applicable>` |
+| OOM / extension decision | `<user-set action, or not applicable>` |
+| Cumulative non-training spend | `USD <value> of USD 20, or not applicable` |
 | Network Volume | `phase3-shared-120gb` (`bk4fycduml`), `US-NE-1` |
 | Python / PyTorch / CUDA | `<versions>` |
 | Random seed or seed set | `<value>` |
@@ -77,7 +87,8 @@ Report directory:
 ```
 
 Record checkpoint intervals, early-stop rules, monitored metrics, and any
-approved deviation from the frozen configuration before the run begins.
+reviewed deviation from the frozen configuration before the run begins. A
+budget, GPU, or duration change for paid training requires a new user decision.
 
 ## Results and validation
 
@@ -89,12 +100,15 @@ approved deviation from the frozen configuration before the run begins.
 | Final training/validation metrics | `<metric names and values>` |
 | Adapter save and checksum | `<path>` / `<sha256>` |
 | Clean-process adapter reload | `passed / failed` |
+| Member 3B checkpoint selection | `<checkpoint ID and validation-only basis, or not applicable>` |
 | Inference output validation | `passed / failed / not applicable` |
 | Evaluation output path and checksum | `<path>` / `<sha256>` |
 
 ## Outcome and handoff
 
 - Decision: `<accept / reject / repeat / investigate>`
+- Review artifact: `phase3/reviews/member3/pilot-review-v1.json`,
+  `phase3/reviews/member3/training-acceptance-v1.json`, or `not applicable`
 - Evidence supporting the decision: `<short factual summary>`
 - Failures or deviations: `<what happened and where the evidence is stored>`
 - Next owner and action: `<member-id and bounded task>`

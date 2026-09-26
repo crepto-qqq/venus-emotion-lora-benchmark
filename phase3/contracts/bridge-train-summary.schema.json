@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.local/phase3/bridge-train-summary.schema.json",
+  "title": "BridgeTrain-v1 release summary",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "dataset_id",
+    "protocol_version",
+    "machine_validation_passed",
+    "full_dataset_ready",
+    "human_review_signoff_pending",
+    "pending_human_review_record_count",
+    "pending_human_review_ids",
+    "formal_training_authorized",
+    "source_image_count",
+    "conversation_count",
+    "unique_image_counts",
+    "conversation_counts",
+    "guidance_image_count",
+    "integrity_checks",
+    "prompt_sha256",
+    "artifact_sha256"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "dataset_id": {"const": "BridgeTrain-v1"},
+    "protocol_version": {"type": "string", "minLength": 1},
+    "machine_validation_passed": {"const": true},
+    "full_dataset_ready": {"type": "boolean"},
+    "human_review_signoff_pending": {"type": "boolean"},
+    "pending_human_review_record_count": {"type": "integer", "minimum": 0},
+    "pending_human_review_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "formal_training_authorized": {"const": false},
+    "source_image_count": {"const": 480},
+    "conversation_count": {"const": 576},
+    "guidance_image_count": {"const": 96},
+    "unique_image_counts": {
+      "type": "object",
+      "required": ["train", "validation"],
+      "properties": {
+        "train": {"const": 400},
+        "validation": {"const": 80}
+      }
+    },
+    "conversation_counts": {
+      "type": "object",
+      "required": ["train", "validation"],
+      "properties": {
+        "train": {"const": 480},
+        "validation": {"const": 96}
+      }
+    },
+    "integrity_checks": {"type": "object"},
+    "prompt_sha256": {"type": "object"},
+    "artifact_sha256": {"type": "object"}
+  }
+}
