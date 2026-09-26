@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.local/phase3/bridge-train-manifest-record.schema.json",
+  "title": "BridgeTrain-v1 manifest record",
+  "type": "object",
+  "required": [
+    "sample_id",
+    "source_image_id",
+    "emotion",
+    "split",
+    "task_type",
+    "image_relpath",
+    "runtime_image_path",
+    "image_sha256",
+    "annotation_relpath",
+    "annotation_sha256",
+    "source_record_path",
+    "source_record_line",
+    "source_record_sha256",
+    "source_review_status",
+    "review_status",
+    "prompt_version",
+    "prompt_sha256"
+  ],
+  "properties": {
+    "sample_id": {"type": "string", "minLength": 1},
+    "source_image_id": {"type": "string", "minLength": 1},
+    "emotion": {
+      "enum": ["amusement", "anger", "awe", "contentment", "disgust", "excitement", "fear", "sadness"]
+    },
+    "split": {"enum": ["train", "validation"]},
+    "task_type": {"enum": ["classification", "joint_guidance"]},
+    "image_relpath": {"type": "string", "pattern": "^image/"},
+    "runtime_image_path": {
+      "type": "string",
+      "pattern": "^/workspace/phase3/data/bridge-train-v1/image/"
+    },
+    "image_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "annotation_relpath": {"type": "string", "pattern": "^annotation/"},
+    "annotation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_record_path": {"type": "string", "minLength": 1},
+    "source_record_line": {"type": "integer", "minimum": 1},
+    "source_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "source_review_status": {"type": ["string", "null"]},
+    "review_status": {"enum": ["not_applicable", "accepted", "edited"]},
+    "reviewed_at_utc": {"type": ["string", "null"]},
+    "prompt_version": {"type": "string", "minLength": 1},
+    "prompt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "guidance_selection_rank": {"type": "integer", "minimum": 1},
+    "generator_provider": {"type": ["string", "null"]},
+    "generator_model": {"type": ["string", "null"]},
+    "replaces_source_image_id": {"type": "string", "minLength": 1}
+  }
+}
