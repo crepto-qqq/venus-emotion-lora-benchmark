@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.local/phase3/bridge-train-sample.schema.json",
+  "title": "BridgeTrain-v1 Qwen-VL sample",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "conversations"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^(amusement|anger|awe|contentment|disgust|excitement|fear|sadness)_[0-9]+__(classification|joint_guidance)$"
+    },
+    "conversations": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "value"],
+          "properties": {
+            "from": {"const": "user"},
+            "value": {
+              "type": "string",
+              "pattern": "^Picture 1: <img>/workspace/phase3/data/bridge-train-v1/image/.+</img>\\n"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "value"],
+          "properties": {
+            "from": {"const": "assistant"},
+            "value": {"type": "string", "minLength": 1}
+          }
+        }
+      ]
+    }
+  }
+}

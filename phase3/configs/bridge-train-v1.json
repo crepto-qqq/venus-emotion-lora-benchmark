@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "dataset_id": "BridgeTrain-v1",
+  "protocol_version": "bridge-train-v1-2026-09-26",
+  "emotion_classes": [
+    "amusement",
+    "anger",
+    "awe",
+    "contentment",
+    "disgust",
+    "excitement",
+    "fear",
+    "sadness"
+  ],
+  "quotas": {
+    "train": {
+      "images_per_class": 50,
+      "guidance_per_class": 10
+    },
+    "validation": {
+      "images_per_class": 10,
+      "guidance_per_class": 2
+    }
+  },
+  "guidance_selection_seed": "bridge-train-v1-guidance-v1",
+  "require_label_supported": true,
+  "release_approval": {
+    "post_correction_human_signoff": true,
+    "pending_human_review_ids": [],
+    "approved_by": "Member 1",
+    "approved_on": "2026-09-26",
+    "approval_scope": "All 12 post-audit BridgeTrain-v1 guidance corrections."
+  },
+  "guidance_source_ids": {
+    "train": {
+      "amusement": [
+        "amusement_05000", "amusement_05001", "amusement_05004", "amusement_05005",
+        "amusement_05006", "amusement_05009", "amusement_05011", "amusement_05012",
+        "amusement_05014", "amusement_05037"
+      ],
+      "anger": [
+        "anger_05002", "anger_05003", "anger_05008", "anger_05010", "anger_05019",
+        "anger_05022", "anger_05026", "anger_05027", "anger_05034", "anger_05043"
+      ],
+      "awe": [
+        "awe_05000", "awe_05003", "awe_05005", "awe_05007", "awe_05010",
+        "awe_05012", "awe_05014", "awe_05015", "awe_05016", "awe_05018"
+      ],
+      "contentment": [
+        "contentment_05000", "contentment_05001", "contentment_05002", "contentment_05003",
+        "contentment_05004", "contentment_05005", "contentment_05006", "contentment_05008",
+        "contentment_05010", "contentment_05011"
+      ],
+      "disgust": [
+        "disgust_05000", "disgust_05002", "disgust_05003", "disgust_05004",
+        "disgust_05005", "disgust_05007", "disgust_05008", "disgust_05009",
+        "disgust_05010", "disgust_05011"
+      ],
+      "excitement": [
+        "excitement_05000", "excitement_05001", "excitement_05002", "excitement_05003",
+        "excitement_05004", "excitement_05005", "excitement_05006", "excitement_05007",
+        "excitement_05008", "excitement_05010"
+      ],
+      "fear": [
+        "fear_05000", "fear_05001", "fear_05003", "fear_05004", "fear_05005",
+        "fear_05006", "fear_05007", "fear_05009", "fear_05010", "fear_05011"
+      ],
+      "sadness": [
+        "sadness_05001", "sadness_05003", "sadness_05004",
+        "sadness_05006", "sadness_05007", "sadness_05008", "sadness_05009",
+        "sadness_05011", "sadness_05017", "sadness_05023"
+      ]
+    },
+    "validation": {
+      "amusement": ["amusement_05002", "amusement_05038"],
+      "anger": ["anger_05024", "anger_05179"],
+      "awe": ["awe_05004", "awe_05043"],
+      "contentment": ["contentment_05007", "contentment_05009"],
+      "disgust": ["disgust_05001", "disgust_05006"],
+      "excitement": ["excitement_05011", "excitement_05012"],
+      "fear": ["fear_05002", "fear_05013"],
+      "sadness": ["sadness_05000", "sadness_05002"]
+    }
+  },
+  "prompts": {
+    "classification": {
+      "version": "emotion-classification-label-only-v1",
+      "sha256": "74767028ca98b34b27991a6eb305f52a44a96cdc6e30a66bad6d29d76a547978",
+      "text": "Which primary emotion does this image convey? Choose exactly one label from: amusement, anger, awe, contentment, disgust, excitement, fear, or sadness. Respond with the label only."
+    },
+    "joint_guidance": {
+      "version": "b1-structured-joint-v1",
+      "sha256": "3bc66cba343e5fdc0776b2b340fe9ed6e2a0076f7f2e8008fcc0f1c012e96994",
+      "text": "You are an emotion-aware image-aesthetics assistant.\n\nUse only visible evidence from the image. Choose exactly one primary emotion from: amusement, anger, awe, contentment, disgust, excitement, fear, or sadness.\n\nExplain how visible elements support the emotion, how composition, colour, lighting, subject placement, or visual hierarchy support or weaken it, and provide concrete aesthetic guidance that preserves or strengthens it. Do not invent objects or unsupported details.\n\nUse exactly this format:\n\nEmotion: <one allowed label>\n\nVisual evidence:\n- <specific visible cue>\n- <specific visible cue>\n\nAesthetic relationship:\n<clear explanation>\n\nGuidance:\n- <concrete action>\n- <concrete action>\n\nFinal emotion: <the same allowed label>"
+    }
+  }
+}

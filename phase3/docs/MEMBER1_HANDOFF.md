@@ -131,12 +131,17 @@ is deferred. Keep future identity evidence outside Git and outside redacted
 reports.
 
 The passing aggregate report establishes technical environment viability only.
-Later owners must still complete the deterministic full-data converter, repair
-and revalidate the released dataset, freeze formal LoRA settings, train and
-save an adapter, reload it, implement the simple demo inference caller, and run
-the agreed evaluation.
+At the time of this Member 1 handoff, later owners still had to complete the
+deterministic full-data converter and every downstream stage. Member 2 has
+since released and signed BridgeTrain-v1 with `full_dataset_ready: true`; see
+[`MEMBER2_HANDOFF.md`](MEMBER2_HANDOFF.md). Formal LoRA settings, training,
+adapter save/reload, the simple demo caller, and evaluation remain downstream.
 
-## Current data boundary
+## Historical data boundary at Member 1 acceptance
+
+This section preserves the source state seen during Member 1 acceptance. It is
+not the current dataset-release verdict. The repaired, task-aware
+BridgeTrain-v1 release and its verifier supersede this historical boundary.
 
 The pulled project snapshot contains 480 JSONL records, but it is not direct
 input to the pinned Qwen loader and is not fully accepted:
@@ -155,10 +160,10 @@ python -m src.datasets.annotation_pipeline validate \
   records: 60 amusement review-status + 60 excitement target-structure + 300
   excitement missing-provenance findings.
 
-The number 420 counts findings, not distinct bad records. These defects do not
-block Member 1's isolated fixture, but they require
-`full_dataset_ready: false`. The complete converter and release checks belong
-to the later data owner.
+The number 420 counts findings, not distinct bad records. These defects did not
+block Member 1's isolated fixture and required that historical report to retain
+`full_dataset_ready: false`. Member 2 later repaired the source state and
+released the separately verified BridgeTrain-v1 dataset.
 
 A separate semantic inspection found three `excitement` exceptions that are
 not additional items in that 420 breakdown:
