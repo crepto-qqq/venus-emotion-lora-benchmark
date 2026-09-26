@@ -20,8 +20,13 @@
     "split_seed": 3888
   },
   "initial_emotions": [
-    "sadness",
+    "amusement",
+    "anger",
     "awe",
-    "contentment"
+    "contentment",
+    "disgust",
+    "excitement",
+    "fear",
+    "sadness"
   ]
 }
