@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "checks": {},
+    "config_sha256": {},
+    "failures": {},
+    "kind": {},
+    "mode": {},
+    "report_sha256": {},
+    "result": {},
+    "schema_version": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "mode",
+    "config_sha256",
+    "checks",
+    "result",
+    "failures",
+    "report_sha256"
+  ],
+  "title": "Member 3 LoRA validation report",
+  "type": "object"
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "kind": {},
+    "matched_module_count": {},
+    "matched_module_names": {},
+    "report_sha256": {},
+    "schema_version": {},
+    "visual_modules_targeted": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "matched_module_names",
+    "matched_module_count",
+    "visual_modules_targeted",
+    "report_sha256"
+  ],
+  "title": "Member 3 LoRA module inventory",
+  "type": "object"
+}

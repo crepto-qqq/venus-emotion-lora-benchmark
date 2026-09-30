@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "kind": "qwen_training_interface",
+  "owner": "Member 3A",
+  "source_inventory_state": "pending_pinned_source_checkout",
+  "source_commit": "efa37ba284d56192b246d9b4ed5d3668c1abd163",
+  "reviewed_patch_sha256": "be9e14a60f4f2189a108aa1f46a7384616bfdd527ca6c0a41a4c175a92172eba",
+  "working_directory": "/workspace/phase3/upstream/Qwen-VL-finetune",
+  "entry_point": "finetune.py",
+  "parser_inventory": [],
+  "allowed_argument_names": [
+    "model_name_or_path", "data_path", "output_dir", "use_lora", "q_lora", "fix_vit",
+    "lora_r", "lora_alpha", "lora_dropout", "lora_bias", "lora_target_modules", "lora_modules_to_save",
+    "bf16", "fp16", "per_device_train_batch_size", "gradient_accumulation_steps", "gradient_checkpointing",
+    "learning_rate", "weight_decay", "max_grad_norm", "num_train_epochs", "max_steps", "lr_scheduler_type",
+    "warmup_ratio", "logging_steps", "save_strategy", "save_steps", "save_total_limit", "seed",
+    "dataloader_num_workers", "model_max_length", "remove_unused_columns", "report_to", "cache_dir"
+  ],
+  "frozen_defaults": {
+    "use_lora": true,
+    "q_lora": false,
+    "fix_vit": true,
+    "lora_bias": "none",
+    "remove_unused_columns": false
+  },
+  "config_to_cli": {
+    "model_name_or_path": "--model_name_or_path", "data_path": "--data_path", "output_dir": "--output_dir",
+    "use_lora": "--use_lora", "q_lora": "--q_lora", "fix_vit": "--fix_vit", "lora_r": "--lora_r",
+    "lora_alpha": "--lora_alpha", "lora_dropout": "--lora_dropout", "lora_bias": "--lora_bias",
+    "lora_target_modules": "--lora_target_modules", "lora_modules_to_save": "--lora_modules_to_save",
+    "bf16": "--bf16", "fp16": "--fp16", "per_device_train_batch_size": "--per_device_train_batch_size",
+    "gradient_accumulation_steps": "--gradient_accumulation_steps", "gradient_checkpointing": "--gradient_checkpointing",
+    "learning_rate": "--learning_rate", "weight_decay": "--weight_decay", "max_grad_norm": "--max_grad_norm",
+    "num_train_epochs": "--num_train_epochs", "max_steps": "--max_steps", "lr_scheduler_type": "--lr_scheduler_type",
+    "warmup_ratio": "--warmup_ratio", "logging_steps": "--logging_steps", "save_strategy": "--save_strategy",
+    "save_steps": "--save_steps", "save_total_limit": "--save_total_limit", "seed": "--seed",
+    "dataloader_num_workers": "--dataloader_num_workers", "model_max_length": "--model_max_length",
+    "remove_unused_columns": "--remove_unused_columns", "report_to": "--report_to", "cache_dir": "--cache_dir"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "kind": "lora_experiment_matrix",
+  "owner": "Member 3A",
+  "comparison": "learning_rate",
+  "allowed_override_fields": ["training.learning_rate"],
+  "selection_rule": {
+    "required": ["reload_passed", "finite_loss", "classification_exact_match", "guidance_format_valid_rate"],
+    "primary": "lowest_validation_loss",
+    "tie_breakers": ["highest_classification_exact_match", "highest_guidance_format_valid_rate", "lowest_elapsed_seconds"]
+  },
+  "candidates": [
+    {"id": "lr-5e-5", "merge_patch": {"training": {"learning_rate": 0.00005}}},
+    {"id": "lr-1e-4", "merge_patch": {"training": {"learning_rate": 0.0001}}},
+    {"id": "lr-2e-4", "merge_patch": {"training": {"learning_rate": 0.0002}}}
+  ]
+}

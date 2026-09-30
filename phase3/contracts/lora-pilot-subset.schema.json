@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "kind": {},
+    "manifest_sha256": {},
+    "schema_version": {},
+    "seed": {},
+    "train_ids": {},
+    "validation_ids": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "seed",
+    "train_ids",
+    "validation_ids",
+    "manifest_sha256"
+  ],
+  "title": "Member 3 LoRA pilot subset",
+  "type": "object"
+}

@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "data": {},
+    "kind": {},
+    "lora": {},
+    "output": {},
+    "pilot_subset": {},
+    "resource_limits": {},
+    "runtime": {},
+    "schema_version": {},
+    "training": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "runtime",
+    "data",
+    "pilot_subset",
+    "lora",
+    "training",
+    "output",
+    "resource_limits"
+  ],
+  "title": "Member 3 LoRA pilot config",
+  "type": "object"
+}
