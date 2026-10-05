@@ -1,5 +1,10 @@
 # Member 1 environment runbook
 
+> Historical private-environment runbook: cloud state was recorded on
+> 2026-09-25, and the private volume name/identifier are redacted. The public
+> checkout also omits the reviewed Qwen patch, model, data, and fixture needed
+> to execute the end-to-end commands.
+
 ## Purpose and stop line
 
 Member 1 establishes a controlled Phase 3 runtime with pinned top-level
@@ -21,9 +26,9 @@ stay under `phase3/`.
 Use the target setup in [`RUNPOD_TEAM_SETUP.md`](RUNPOD_TEAM_SETUP.md): a
 normal RunPod Team, one on-demand Secure Cloud Pod with at least 48 GB GPU
 memory, and one 120 GB Standard Network Volume mounted at `/workspace`. This
-technical target completed on 2026-09-25. The retained volume is
-`phase3-shared-120gb` (`bk4fycduml`) in `US-NE-1`; the shared environment,
-exact model snapshot, and fixture are present and verified. H100 NVL
+technical target completed on 2026-09-25. A private volume in `US-NE-1` held
+the shared environment, exact model snapshot, and fixture at the recorded
+handoff point. H100 NVL
 `attempt-001` and both Member 1 verification passes succeeded at project commit
 `ea2dace2026523b6a498d634301927ddc335e015`. All temporary Pods are stopped.
 
@@ -78,7 +83,8 @@ later approved compute window:
    intended maximum runtime for review.
 3. Confirm the existing Team still lists Member 1 as Admin. This was complete
    on 2026-09-25; do not create another Team.
-4. Reuse `phase3-shared-120gb` in `US-NE-1`. Do not create another volume.
+4. In the authorised private environment, reuse the existing approved volume;
+   do not create another volume solely from this historical runbook.
 5. Deploy at most one approved Pod with that volume mounted at `/workspace` and
    configure an automatic stop limit.
 6. Run bootstrap only to verify or repair the retained runtime. It downloads

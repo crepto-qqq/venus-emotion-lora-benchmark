@@ -3,3 +3,33 @@ Thumbs.db
 desktop.ini
 *.tmp
 
+# Python and local environments
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.venv/
+venv/
+
+# Credentials and machine-local configuration
+.env
+.env.*
+!.env.example
+!*.env.example
+
+# Restricted datasets, generated evidence, and model artefacts
+/data/
+/results/
+/External/
+/phase3/releases/
+/phase3/reports/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Local IDE and notebook state
+.idea/
+.vscode/
+.ipynb_checkpoints/
+

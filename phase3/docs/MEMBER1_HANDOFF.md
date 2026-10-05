@@ -1,5 +1,9 @@
 # Member 1 handoff
 
+> Historical record only: cloud-resource state and prices below were observed
+> on 2026-09-25. The private volume name and identifier are redacted, and this
+> public portfolio does not claim that the resource still exists.
+
 ## Completion boundary
 
 Member 1's technical environment handoff contains the branch, pins, reviewed
@@ -45,9 +49,8 @@ shared read-only inputs.
 
 Member 1 technical environment acceptance is complete as of 2026-09-25:
 
-1. the shared 120 GB Standard Network Volume `phase3-shared-120gb`
-   (`bk4fycduml`) is retained in `US-NE-1`; it was mounted at `/workspace` for
-   acceptance and must use that mount point on future Pods;
+1. a private shared 120 GB Standard Network Volume in `US-NE-1` was mounted at
+   `/workspace` for acceptance;
 2. bootstrap produced the shared Python 3.10.13/PyTorch 2.0.1+cu118
    environment, exact upstream checkouts, and verified read-only model
    snapshot;
@@ -63,9 +66,10 @@ Member 1 technical environment acceptance is complete as of 2026-09-25:
 6. the temporary Pods were stopped after the evidence was copied to the
    shared volume and checked.
 
-The observed compute spend was approximately USD 1.39. The retained volume is
-approximately USD 8.40 per month at the recorded rate. No running Pod is part
-of the handoff.
+The observed compute spend was approximately USD 1.39. The private volume was
+estimated at USD 8.40 per month at the recorded rate. These are historical
+figures, not current billing information; no running Pod was part of the
+handoff.
 
 Six-member account onboarding is a separate coordination gate. Invitations
 for Members 2-6 and verification through another member's own RunPod account

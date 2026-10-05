@@ -1,32 +1,34 @@
 # RunPod team setup
 
+> Historical record only: resource state, membership, availability, and prices
+> below were observed on 2026-09-25. This public portfolio cannot inspect the
+> current RunPod account. The private volume name and identifier are redacted.
+
 ## Recorded state after Member 1 technical acceptance
 
 The following state was confirmed on 2026-09-25:
 
-- the RunPod Team has been created, Member 1 is its `Admin`, and Member 1 is
-  currently its only member;
-- one 120 GB Standard Network Volume named `phase3-shared-120gb`
-  (`bk4fycduml`) exists in `US-NE-1` and is retained for Phase 3;
+- the RunPod Team had been created, Member 1 was its `Admin`, and Member 1 was
+  its only member at the handoff point;
+- one private 120 GB Standard Network Volume existed in `US-NE-1` for Phase 3;
 - the shared environment, pinned upstream sources, model snapshot, and
-  technical fixture are present on the volume;
+  technical fixture were present on the volume;
 - H100 NVL `attempt-001`, Member 1 clean-shell verification, and verification
   from a replacement Pod attached to the same volume all passed; and
-- every temporary Pod is stopped. Only the retained volume continues to incur
-  charges.
+- every temporary Pod was recorded as stopped at that handoff point.
 
-Member 1's technical environment is complete. Invitations for Members 2-6 and
-independent cross-account identity verification are deferred, so shared-access
-completion is not claimed. Check capacity and price immediately before any
-future compute window.
+Member 1's technical environment was recorded as complete. Invitations for
+Members 2-6 and independent cross-account identity verification were deferred,
+so shared-access completion was not claimed. Check resource existence,
+capacity, and price before any future compute window.
 
 ## Target account and role policy
 
-The existing normal RunPod Team keeps Member 1 as `Admin`. When onboarding is
-resumed, Members 2-6 receive `Dev` roles so all six members can access the
-shared project through their own accounts. Every member uses an individual
-RunPod account and an individual SSH public key. Invitation acceptance and a
-separate-account verification must finish before the handoff is called shared.
+At the recorded handoff, the normal RunPod Team kept Member 1 as `Admin`. If
+that private Team is confirmed to still exist and onboarding resumes, Members
+2-6 should receive `Dev` roles so all six members use their own accounts and
+SSH public keys. Invitation acceptance and a separate-account verification
+must finish before the handoff is called shared.
 
 Follow RunPod's current guidance:
 <https://docs.runpod.io/accounts-billing/manage-accounts>. An invitation link
@@ -40,9 +42,10 @@ are not isolation between hostile users.
 
 ## Retained storage and future compute
 
-Reuse the existing **120 GB Standard Network Volume** and mount it at
-`/workspace` on at most one approved **on-demand Secure Cloud Pod**. Do not
-create another Phase 3 volume or a Pod per member. The technical acceptance
+If the private resource is confirmed to still exist, reuse the approved
+**120 GB Standard Network Volume** and mount it at `/workspace` on at most one
+approved **on-demand Secure Cloud Pod**. Do not create another Phase 3 volume
+or a Pod per member solely from this historical record. The technical acceptance
 enforces at least **44 GiB total GPU memory** and at least **40 GiB free GPU
 memory immediately before model loading**. For a future run, select a
 compatible 48 GB-or-larger GPU only after confirming current deployment
@@ -56,7 +59,7 @@ at the rate displayed at deployment. Review the current storage constraints at
 <https://docs.runpod.io/storage/network-volumes>; a Network Volume is tied to
 its data-center location and must be attached during deployment.
 
-The target volume contains:
+At the handoff point, the private target volume contained:
 
 ```text
 /workspace/models/Venus-Q-Stage1
@@ -93,8 +96,8 @@ run as the standard shared handoff.
 The following items are complete:
 
 1. The Team was created and Member 1 was confirmed as Admin.
-2. `phase3-shared-120gb` was created in `US-NE-1` and mounted at `/workspace`
-   for the accepted compute windows.
+2. The private network volume was created in `US-NE-1` and mounted at
+   `/workspace` for the accepted compute windows.
 3. Bootstrap downloaded only missing files from the pinned
    `popo28/Venus-Q-Stage1` revision into
    `/workspace/models/Venus-Q-Stage1`, using the persistent Hugging Face cache.
@@ -112,9 +115,10 @@ The following items are complete:
 The remaining access-onboarding sequence is deliberately deferred:
 
 1. Invite Members 2-6 as Dev. Each member registers their own public key.
-2. Member 2 mounts the retained volume from a separate RunPod account and
-   verifies the immutable attempt from a member-owned clone pinned to commit
-   `ea2dace`. Do not switch the shared checkout in place.
+2. If the private resource is confirmed to still exist, Member 2 mounts it from
+   a separate RunPod account and verifies the immutable attempt from a
+   member-owned clone pinned to commit `ea2dace`. Do not switch the shared
+   checkout in place.
 3. Preserve private Team and SSH identity evidence outside Git. This access
    check does not require an H100 to stay running.
 
@@ -162,11 +166,11 @@ redacted reports.
 
 Record Pod ID, GPU type, displayed hourly rate, start/stop UTC timestamps,
 billed duration, and estimated/actual cost in the team's private cost record.
-The completed setup used approximately USD 1.39 of compute. The retained 120 GB
-volume is approximately USD 8.40 per month at the recorded rate, so the first
-month's observed setup total is approximately USD 9.79. Every temporary Pod is
-stopped. For future windows, set a short automatic stop timer and confirm the
-console state after stopping; closing SSH does not stop the Pod.
+The completed setup used approximately USD 1.39 of compute. At the recorded
+2026-09-25 rate, the private 120 GB volume was estimated at USD 8.40 per month,
+for an observed first-month setup estimate of USD 9.79. This is not current
+billing information. For future windows, set a short automatic stop timer and
+confirm the console state after stopping; closing SSH does not stop the Pod.
 
 The Network Volume is working storage, not the only backup. Push source and
 redacted reports to Git, and copy irreplaceable private evidence to a separate

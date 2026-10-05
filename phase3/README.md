@@ -1,5 +1,12 @@
 # Phase 3 handoff
 
+> **Public-portfolio boundary:** this is a historical source snapshot of the
+> team's Phase 3 engineering. The private dataset release, images, reports,
+> reviewed Qwen compatibility patch, model files, and cloud workspace are not
+> distributed here. The public tests remain runnable, but bootstrap, dataset
+> rebuild, GPU acceptance, and end-to-end training commands require those
+> separately authorised inputs and will not run unchanged from this checkout.
+
 This directory contains the shared Phase 3 environment, dataset, and handoff
 contracts. Member 1 owns the pinned runtime and upstream integration. Member 2
 owns the deterministic BridgeTrain-v1 conversion, validation, and training
@@ -14,8 +21,9 @@ runs the formal Eval80, and Member 6 owns the minimal inference API.
 BridgeTrain-v1 has passed machine validation against the original EmoSet
 archive and both frozen evaluation sets. It contains 480 unique images and 576
 Qwen-VL conversations: 480 classification samples plus 96 balanced
-joint-guidance samples. The Git-safe artifacts are under
-`releases/bridge-train-v1/`; the 480 source images remain outside Git.
+joint-guidance samples. In the private project, the Git-safe release artefacts
+were stored under `releases/bridge-train-v1/`. Both those derived records and
+the 480 source images are intentionally excluded from this public portfolio.
 
 Member 1 approved all twelve post-audit guidance corrections on 2026-09-26.
 The rebuilt release records `full_dataset_ready: true`, no pending human-review
@@ -43,11 +51,12 @@ scope.
 
 ## Current status
 
-Member 1's technical environment and GPU acceptance completed on 2026-09-25:
+Member 1's technical environment and GPU acceptance completed on 2026-09-25.
+The following bullets record historical state as of that date; this repository
+has no access to and makes no claim about the current cloud state:
 
-- the shared 120 GB Standard Network Volume `phase3-shared-120gb`
-  (`bk4fycduml`) is retained in `US-NE-1`; it was mounted at `/workspace` for
-  acceptance and must use that mount point on future Pods;
+- a private 120 GB Standard Network Volume in `US-NE-1` was mounted at
+  `/workspace` for acceptance;
 - `/workspace/phase3/envs/venus-phase3` contains Python 3.10.13 and
   PyTorch 2.0.1+cu118, and the exact upstream sources and model snapshot were
   verified and sealed read-only;
@@ -55,14 +64,13 @@ Member 1's technical environment and GPU acceptance completed on 2026-09-25:
   passed every runtime gate, with no optimizer step and no adapter save;
 - Member 1 clean-shell verification and a second verification from a
   replacement Pod attached to the retained volume both passed; and
-- every temporary Pod is stopped, so only the Network Volume continues to
-  incur charges.
+- every temporary Pod was recorded as stopped at the handoff point.
 
 The accepted runtime and evidence are pinned to project commit
-`ea2dace2026523b6a498d634301927ddc335e015`. The observed compute spend was
-approximately USD 1.39, and the retained volume is approximately USD 8.40 per
-month at the recorded rate. Prices and future GPU capacity must be checked
-again before another Pod is started.
+`ea2dace2026523b6a498d634301927ddc335e015`. The private project recorded an
+observed compute spend of approximately USD 1.39 and an estimated storage rate
+of USD 8.40 per month at that time. These are historical observations, not a
+statement of current billing or resource availability.
 
 Before each paid pilot and formal training run, Member 3A must ask the user to
 set the allowed GPU, maximum hourly price, total budget for that stage, and the
@@ -94,13 +102,14 @@ download missing files directly from the pinned Hugging Face revision, verify
 all 22 locked files and their hashes, write exact provenance, and remove write
 bits from the snapshot, marker, and model root.
 
-## Reproduction and later verification entry points
+## Historical reproduction and verification entry points
 
 The following commands are retained for recovery, reproduction, or a later
-acceptance attempt. They are not instructions to create another volume or
-rerun the already-passing `attempt-001`. Run them from a clean SSH login shell
-at the repository root on a Pod that mounts the retained volume. The standard
-handoff uses `/workspace/phase3` as its runtime root and
+acceptance attempt inside the authorised private environment. They are not
+self-contained public quick-start commands: the excluded Qwen patch, private
+dataset fixture, model snapshot, and cloud workspace are prerequisites. They
+are not instructions to create another volume or rerun the already-passing
+`attempt-001`. The standard handoff used `/workspace/phase3` as its runtime root and
 `/workspace/phase3/envs/venus-phase3` as its shared environment. Low-level CLI
 path overrides are for isolated tests or recovery only.
 
@@ -149,8 +158,8 @@ access evidence outside Git.
   bootstrap, acceptance, verification, recovery, and timing procedure.
 - [`docs/MEMBER1_HANDOFF.md`](docs/MEMBER1_HANDOFF.md) defines the ownership
   boundary and the evidence later members may rely on.
-- [`docs/RUNPOD_TEAM_SETUP.md`](docs/RUNPOD_TEAM_SETUP.md) records the current
-  cloud state and the planned multi-account provisioning.
+- [`docs/RUNPOD_TEAM_SETUP.md`](docs/RUNPOD_TEAM_SETUP.md) records the
+  2026-09-25 historical cloud state and conditional future access policy.
 - [`docs/TRAINING_INPUT_CONTRACT.md`](docs/TRAINING_INPUT_CONTRACT.md) records
   the accepted upstream conversation shape and BridgeTrain-v1 release gates.
 - [`docs/EXPERIMENT_RECORD_TEMPLATE.md`](docs/EXPERIMENT_RECORD_TEMPLATE.md)
@@ -159,17 +168,15 @@ access evidence outside Git.
   checks every member should complete before using or handing off shared work.
 - [`docs/MEMBER2_HANDOFF.md`](docs/MEMBER2_HANDOFF.md) defines the complete
   BridgeTrain-v1 release, rebuild, validation, and shared-volume handoff.
-- [`../Docs/phase3/MEMBER3_START_HERE_EN.md`](../Docs/phase3/MEMBER3_START_HERE_EN.md)
-  is the canonical start document for both Member 3 agents and a remote
-  CodexAgent with only a clean repository checkout.
-- [`../Docs/phase3/PHASE3_LORA_WORKFLOW_EN.docx`](../Docs/phase3/PHASE3_LORA_WORKFLOW_EN.docx)
-  is the canonical project-level English workflow.
+- `Docs/phase3/MEMBER3_START_HERE_EN.md` was the private project's canonical
+  Member 3 start document and is not distributed here.
+- `Docs/phase3/PHASE3_LORA_WORKFLOW_EN.docx` was the private project's
+  canonical project-level workflow and is not distributed here.
 
-The two documentation roots have separate purposes: `Docs/phase3/` contains
-the canonical English project workflow and Member 3 entry point, while
-`phase3/docs/` contains technical contracts and execution runbooks owned by
-the Phase 3 implementation. Repository documentation links only to the English
-files in `Docs/phase3/`.
+In the private repository, `Docs/phase3/` contained assessment/project workflow
+documents, while `phase3/docs/` contained the technical contracts and runbooks
+retained in this portfolio. References to the former are provenance markers,
+not public links.
 
 The one-record fixture proves only that the controlled stack can consume a real
 image and complete forward/backward with BF16 floating base parameters, BF16

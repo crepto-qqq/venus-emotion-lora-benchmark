@@ -4,7 +4,7 @@ This document records the team's agreed research workflow. "Phase 1", "Phase 2",
 
 Project phases are assigned by the intervention being tested, not by execution date. Work from different phases may overlap when model, prompt, and training configurations are clearly labelled and stored separately.
 
-The canonical controls, dataset partitions, scoring rules, and permitted claims are defined in [`Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md`](Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md). That protocol takes precedence if an earlier planning statement conflicts with it.
+In the private project, the canonical controls, dataset partitions, scoring rules, and permitted claims were defined in `Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md`. That assessment document is intentionally not distributed in this public portfolio; this roadmap records only the engineering context needed to interpret the retained source.
 
 ## Overall objective
 

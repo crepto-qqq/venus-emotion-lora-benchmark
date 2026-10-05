@@ -124,4 +124,4 @@ _Avoid_: Main method, mandatory first-stage component
 
 ## Canonical Experiment Protocol
 
-Dataset selection, review checkpoints, A/B0/B1/C controls, BridgeTrain construction, the 0–10 Emotion Recognition Score, the five-dimension 0–10 Emotion-Aware Guidance Score, training guardrails, and permitted success claims are defined in [`Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md`](Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md). That protocol takes precedence over earlier planning drafts when terminology or evaluation rules differ.
+In the private project, dataset selection, review checkpoints, A/B0/B1/C controls, BridgeTrain construction, scoring, training guardrails, and permitted claims were governed by `Docs/EMOTION_AWARE_EXPERIMENT_PROTOCOL.md`. That assessment document is intentionally excluded from this public portfolio; this context file preserves the terminology needed to read the retained engineering source.

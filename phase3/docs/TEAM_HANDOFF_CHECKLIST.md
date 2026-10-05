@@ -7,8 +7,8 @@ parallel after account onboarding.
 ## Before starting
 
 - [ ] Use your own RunPod account and SSH public key. Do not share credentials.
-- [ ] Confirm the Pod mounts the retained `phase3-shared-120gb` volume
-  (`bk4fycduml`) at `/workspace`; do not create another Phase 3 volume.
+- [ ] In the authorised private environment, confirm the Pod mounts the
+  approved existing volume at `/workspace`; keep its identifier out of Git.
 - [ ] Record the Pod's GPU, displayed price, start time, and automatic stop
   limit in the private cost record.
 - [ ] Classify the planned cost as training or non-training. Track all

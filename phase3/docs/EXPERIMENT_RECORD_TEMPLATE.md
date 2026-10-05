@@ -53,7 +53,7 @@ and no approval from another team member is required.
 | Wall-clock / attempt limits | `<values, or not applicable>` |
 | OOM / extension decision | `<user-set action, or not applicable>` |
 | Cumulative non-training spend | `USD <value> of USD 20, or not applicable` |
-| Network Volume | `phase3-shared-120gb` (`bk4fycduml`), `US-NE-1` |
+| Network Volume | `<private volume reference and region; keep identifiers out of Git>` |
 | Python / PyTorch / CUDA | `<versions>` |
 | Random seed or seed set | `<value>` |
 

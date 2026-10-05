@@ -99,6 +99,11 @@ class HandoffVerificationTests(unittest.TestCase):
     def _fixture_and_manifest(self) -> tuple[list[dict], dict]:
         config = read_json(PROJECT_ROOT / "phase3/configs/member1-smoke.json")
         lock = config["fixture"]
+        restricted_dataset = PROJECT_ROOT / lock["dataset_relpath"]
+        if not restricted_dataset.is_file():
+            self.skipTest(
+                "restricted BridgeTrain fixture is intentionally excluded from the public portfolio"
+            )
         record = _read_locked_record(PROJECT_ROOT, config)
         disjointness, evaluation_checks = _check_disjointness(
             project_root=PROJECT_ROOT,

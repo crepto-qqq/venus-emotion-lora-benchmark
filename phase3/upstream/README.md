@@ -3,8 +3,15 @@
 Member 1 does not vendor or edit an uncontrolled copy of the upstream
 fine-tuning repository. The runtime fetches
 `cognitedata/Qwen-VL-finetune` at commit
-`efa37ba284d56192b246d9b4ed5d3668c1abd163`, verifies that commit, and applies
-[`patches/qwen-vl-finetune-efa37ba-phase3.patch`](patches/qwen-vl-finetune-efa37ba-phase3.patch).
+`efa37ba284d56192b246d9b4ed5d3668c1abd163`, verifies that commit, and applied
+a reviewed compatibility patch in the private project.
+
+> **Public-portfolio boundary:** the patch is intentionally not redistributed
+> here because it contains a derivative diff against separately licensed
+> upstream source. Its path and SHA-256 remain in the source lock as historical
+> provenance. Consequently, `fetch_upstream.sh`, `bootstrap.sh`, and the manual
+> command below require the authorised private patch and will stop when it is
+> absent; no substitute patch is fabricated by this repository.
 
 The patch makes three compatibility corrections:
 
@@ -23,7 +30,7 @@ trainable LoRA adapter parameters in FP32. It expects exactly 128 matched target
 modules and 3,506,176 trainable parameters. These observations do not claim
 that every internal LoRA matrix operation runs in BF16.
 
-Verify the patch against a clean checkout:
+The private project verified the patch against a clean checkout with:
 
 ```bash
 git clone https://github.com/cognitedata/Qwen-VL-finetune.git /tmp/qwen-vl-finetune

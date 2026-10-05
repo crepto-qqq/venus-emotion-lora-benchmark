@@ -1,29 +1,33 @@
 # Contribution evidence
 
-The private team repository attributes **35 commits** to Tian Liao (portfolio account: `@crepto-qqq`) in the locally available project history. The original course commits used the University of Sydney identity `tlia0262`. The count includes feature, documentation, handoff, and merge commits.
+The original private team repository attributes **35 commits** to Tian Liao (portfolio account: `@crepto-qqq`; University of Sydney identity: `tlia0262`). After removing restricted and third-party paths, 29 source-relevant commits remain in this public history. Every retained source-history commit is attributed to Tian.
 
-## Selected authored commits
+Commit hashes changed because Git history was filtered. The identifiers below are the new, directly inspectable public hashes.
 
-| Commit | Date | Contribution |
+## Selected retained commits
+
+| Public commit | Date | Contribution |
 |---|---|---|
-| `c4d9ba2` | 2026-08-25 | Migrated and clarified project context and roadmap |
-| `851fa51` | 2026-08-25 | Documented evaluation process, scoring rules, compute strategy, and resource plan |
-| `b216780` | 2026-08-25 | Refined the GPU execution strategy |
-| `9b5ba7a` | 2026-09-01 | Preserved the emotion-aware protocol and Eval20 baseline |
-| `d3c2748` | 2026-09-06 | Added annotation work for awe, sadness, and contentment and documented the API-assisted collection workflow |
-| `6f083d9` | 2026-09-07 | Organised the frozen Eval80 evaluation workflow |
-| `f56b80e` | 2026-09-08 | Added accepted condition-A results |
-| `a102770` | 2026-09-09 | Added B0 and B1 Eval80 outputs |
-| `f7d3d38` | 2026-09-09 | Archived Eval80 RunPod execution scripts |
-| `81478e6` | 2026-09-24 | Added the LoRA environment and compatibility handoff |
-| `6da4320` | 2026-09-25 | Hardened acceptance checks for the environment handoff |
-| `ea2dace` | 2026-09-25 | Updated RunPod team-provisioning status |
-| `96ee49d` | 2026-09-26 | Finalised the Phase 3 environment handoff |
-| `df0fb0c` | 2026-09-26 | Completed the Phase 3 training-data handoff |
-
-The original GitHub Enterprise repository is private. Commit identifiers are provided as concise audit references and are not hyperlinks.
+| `d5725fc` | 2026-08-25 | Migrated and clarified the project context and roadmap |
+| `7640926` | 2026-08-25 | Defined the evaluation process, scoring rules, compute strategy, and resource plan |
+| `cf84dad` | 2026-08-25 | Refined the GPU execution strategy |
+| `25e210d` | 2026-09-01 | Implemented the emotion-aware protocol and Eval20 baseline workflow |
+| `99a1fc0` | 2026-09-06 | Extended the annotation pipeline for awe, sadness, and contentment and documented API-assisted collection |
+| `573f2ad` | 2026-09-07 | Organised the frozen Eval80 evaluation workflow |
+| `114ea2b` | 2026-09-09 | Added the Eval80 RunPod execution scripts |
+| `6e5af32` | 2026-09-24 | Added the Phase 3 LoRA environment and compatibility handoff |
+| `9c1f1aa` | 2026-09-25 | Hardened the environment handoff acceptance checks |
+| `016826b` | 2026-09-25 | Updated RunPod team-provisioning status and instructions |
+| `74ed57e` | 2026-09-26 | Finalised the Phase 3 LoRA environment handoff |
+| `05197c4` | 2026-09-26 | Completed the Phase 3 training-data handoff source and contracts |
 
 ## Contribution boundary
 
-This portfolio claims only the work supported by the private Git history and project artefacts. It does not claim sole ownership of the six-person project, completed LoRA training, or production of a trained adapter checkpoint.
+The repository preserves Tian's code history and leadership evidence without claiming sole ownership of the six-person project. In particular, it does not claim:
+
+- authorship of the upstream Venus, AesGuide, Qwen, or dataset assets;
+- completion of formal LoRA optimiser training or production of an adapter checkpoint;
+- ownership of teammates' work merely because it formed part of the same capstone.
+
+The retained history is the evidence for individual implementation. Project-level results are described as team outcomes unless a specific Tian-authored commit supports a narrower claim.
 
