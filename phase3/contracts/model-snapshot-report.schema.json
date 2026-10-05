@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.example/phase3/model-snapshot-report.schema.json",
+  "title": "Phase 3 model snapshot preparation report",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "kind",
+    "generated_at_utc",
+    "passed",
+    "marker_created",
+    "download_attempted",
+    "missing_file_count_before",
+    "source_lock",
+    "snapshot",
+    "provenance",
+    "sealed",
+    "errors"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "kind": {"const": "phase3_model_snapshot"},
+    "generated_at_utc": {"type": "string", "format": "date-time"},
+    "passed": {"type": "boolean"},
+    "marker_created": {"type": "boolean"},
+    "download_attempted": {"type": "boolean"},
+    "missing_file_count_before": {"type": "integer", "minimum": 0},
+    "source_lock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "revision", "weight_format", "snapshot_manifest_sha256"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "weight_format": {"type": "string", "minLength": 1},
+        "snapshot_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "snapshot": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["manifest_sha256", "file_count", "total_bytes"],
+      "properties": {
+        "manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "file_count": {"type": "integer", "minimum": 1},
+        "total_bytes": {"type": "integer", "minimum": 1}
+      }
+    },
+    "provenance": {
+      "type": ["object", "null"],
+      "additionalProperties": false,
+      "required": ["schema_version", "repo_id", "revision", "weight_format", "snapshot_manifest_sha256", "marker_sha256"],
+      "properties": {
+        "schema_version": {"const": 1},
+        "repo_id": {"type": "string", "minLength": 1},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "weight_format": {"type": "string", "minLength": 1},
+        "snapshot_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "marker_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "sealed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applied", "verified", "manifest_file_count", "manifest_files_read_only", "marker_read_only", "model_root_read_only"],
+      "properties": {
+        "applied": {"type": "boolean"},
+        "verified": {"type": "boolean"},
+        "manifest_file_count": {"type": "integer", "minimum": 1},
+        "manifest_files_read_only": {"type": "boolean"},
+        "marker_read_only": {"type": "boolean"},
+        "model_root_read_only": {"type": "boolean"}
+      }
+    },
+    "errors": {"type": "array", "items": {"type": "string"}}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"passed": {"const": true}}, "required": ["passed"]},
+      "then": {
+        "properties": {
+          "snapshot": {"type": "object"},
+          "provenance": {"type": "object"},
+          "sealed": {
+            "properties": {
+              "applied": {"const": true},
+              "verified": {"const": true},
+              "manifest_files_read_only": {"const": true},
+              "marker_read_only": {"const": true},
+              "model_root_read_only": {"const": true}
+            }
+          },
+          "errors": {"maxItems": 0}
+        }
+      },
+      "else": {"properties": {"errors": {"minItems": 1}}}
+    }
+  ]
+}

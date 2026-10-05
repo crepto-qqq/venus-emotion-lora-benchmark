@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://soft3888.example/phase3/technical-fixture.schema.json",
+  "title": "Phase 3 technical smoke fixture",
+  "type": "array",
+  "minItems": 1,
+  "maxItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["id", "technical_infrastructure_only", "conversations", "provenance"],
+    "properties": {
+      "id": {"const": "contentment_05000"},
+      "technical_infrastructure_only": {"const": true},
+      "conversations": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "prefixItems": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "value"],
+            "properties": {
+              "from": {"const": "user"},
+              "value": {"type": "string", "pattern": "<img>(?:/|[A-Za-z]:/).+</img>"}
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "value"],
+            "properties": {
+              "from": {"const": "assistant"},
+              "value": {"type": "string", "minLength": 1}
+            }
+          }
+        ]
+      },
+      "provenance": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["dataset_record_sha256", "annotation_sha256", "image_sha256", "source_split", "disjointness_check"],
+        "properties": {
+          "dataset_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "annotation_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "image_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "source_split": {"const": "train"},
+          "disjointness_check": {"enum": ["passed", "limited"]}
+        }
+      }
+    }
+  }
+}

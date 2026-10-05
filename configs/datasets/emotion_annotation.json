@@ -1,0 +1,32 @@
+{
+  "protocol_version": "emotion-joint-gpt-v1",
+  "model": "gpt-5.4-2026-03-05",
+  "endpoint": "https://api.openai.com/v1/responses",
+  "api_key_env": "OPENAI_API_KEY",
+  "prompt_path": "data/datasets/Q&A_prompt_api_v2.txt",
+  "prompt_version": "sam-framework-api-v2",
+  "image_detail": "high",
+  "reasoning_effort": "none",
+  "temperature": 0.2,
+  "max_output_tokens": 900,
+  "store": false,
+  "timeout_seconds": 180,
+  "max_retries": 3,
+  "selection": {
+    "start_image_number": 5000,
+    "images_per_class": 60,
+    "training_per_class": 50,
+    "validation_per_class": 10,
+    "split_seed": 3888
+  },
+  "initial_emotions": [
+    "amusement",
+    "anger",
+    "awe",
+    "contentment",
+    "disgust",
+    "excitement",
+    "fear",
+    "sadness"
+  ]
+}

@@ -1,0 +1,61 @@
+# Python environments and runtime caches
+envs/
+.venv/
+venv/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+cache/
+
+# Runtime-only upstream checkouts and shared work areas
+upstream/Qwen-VL-finetune/
+upstream/Venus_CVPR2026/
+data/
+smoke/
+members/
+runs/
+locks/
+
+# Images and model/training artifacts must not enter Git
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.gif
+*.bmp
+*.tif
+*.tiff
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.onnx
+**/models/
+**/adapters/
+**/checkpoints/
+
+# Logs, secrets, and private evidence
+*.log
+*.pid
+*.lock
+.env
+.env.*
+*.pem
+*.key
+*token*
+reports/**/private/
+reports/**/screenshots/
+reports/**/*private*
+
+# Generated reports are private by default. The checked-in README remains a
+# placeholder; copy in only deliberately redacted summaries after review.
+reports/**/*.json
+reports/**/*.txt
+!reports/**/README.md
+
+# Redacted, machine-readable acceptance summaries and README files may be
+# committed deliberately. Review them for credentials, hostnames, signed URLs,
+# and private image paths before adding them.
