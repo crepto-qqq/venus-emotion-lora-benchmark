@@ -15,19 +15,25 @@ def parse_guidance(text):
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--predictions",type=Path,required=True,help="JSONL: id,prediction[,loss]"); ap.add_argument("--validation",type=Path,default=ROOT/"phase3/releases/bridge-train-v1/bridge-train-v1.validation.json"); ap.add_argument("--output",type=Path,required=True); a=ap.parse_args()
-    gold={x["id"]:x for x in read_json(a.validation)}; pred={}
+    gold={x["id"]:x for x in read_json(a.validation)}; pred={}; duplicates=[]
     for line in a.predictions.read_text(encoding="utf-8").splitlines():
         if line.strip():
-            r=json.loads(line); pred[r["id"]]=r
-    cls_total=cls_ok=guide_total=guide_valid=0; losses={"classification":[],"joint_guidance":[]}; missing=[]
+            r=json.loads(line)
+            if r["id"] in pred: duplicates.append(r["id"])
+            pred[r["id"]]=r
+    cls_total=cls_ok=guide_total=guide_valid=0; losses={"classification":[],"joint_guidance":[]}; missing=[]; weighted_loss=0.0; total_tokens=0
     for sid,s in gold.items():
         p=pred.get(sid)
         if not p: missing.append(sid); continue
         t=task_type(sid); text=str(p.get("prediction","")).strip()
+        tokens=p.get("supervised_tokens")
+        loss=p.get("loss")
+        if isinstance(tokens,int) and not isinstance(tokens,bool) and tokens>0 and isinstance(loss,(int,float)) and math.isfinite(loss):
+            weighted_loss += loss*tokens; total_tokens += tokens
         if isinstance(p.get("loss"),(int,float)) and math.isfinite(p["loss"]): losses[t].append(float(p["loss"]))
         if t=="classification": cls_total+=1; cls_ok += int(text.lower()==s["conversations"][1]["value"].strip().lower())
         else:
             guide_total+=1; valid,_=parse_guidance(text); guide_valid += int(valid)
-    report={"schema_version":1,"kind":"lora_pilot_evaluation","validation_set":"BridgeTrain-v1 validation only","prediction_count":len(pred),"missing_ids":missing,"classification_exact_match":cls_ok/cls_total if cls_total else None,"guidance_format_valid_rate":guide_valid/guide_total if guide_total else None,"validation_loss":{"classification":sum(losses['classification'])/len(losses['classification']) if losses['classification'] else None,"joint_guidance":sum(losses['joint_guidance'])/len(losses['joint_guidance']) if losses['joint_guidance'] else None},"result":"passed" if not missing else "incomplete"}
+    report={"schema_version":1,"kind":"lora_pilot_evaluation","validation_set":"BridgeTrain-v1 validation only","prediction_count":len(pred),"missing_ids":missing,"duplicate_ids":duplicates,"unexpected_ids":sorted(set(pred)-set(gold)),"classification_exact_match":cls_ok/cls_total if cls_total else None,"guidance_format_valid_rate":guide_valid/guide_total if guide_total else None,"validation_token_weighted_loss":weighted_loss/total_tokens if total_tokens else None,"validation_loss":{"classification":sum(losses['classification'])/len(losses['classification']) if losses['classification'] else None,"joint_guidance":sum(losses['joint_guidance'])/len(losses['joint_guidance']) if losses['joint_guidance'] else None},"result":"passed" if not missing and not duplicates and set(pred)==set(gold) else "incomplete"}
     report["report_sha256"]=canonical_sha256(report,omit_key="report_sha256"); write_json(a.output,report); print(json.dumps(report,indent=2))
 if __name__=="__main__": main()

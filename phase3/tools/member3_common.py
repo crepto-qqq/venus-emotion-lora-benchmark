@@ -2,7 +2,7 @@
 """Shared, Git-safe helpers for Phase 3 Member 3 LoRA tooling."""
 from __future__ import annotations
 
-import hashlib, json, os, re, shlex, subprocess, tempfile
+import hashlib, json, os, re, shlex, subprocess, tempfile, math
 from pathlib import Path
 from typing import Any
 
@@ -108,10 +108,12 @@ def validate_resource_limits(limits: dict[str, Any] | None) -> list[str]:
     if not isinstance(limits, dict): return ["resource_limits must be supplied before a paid optimizer run"]
     req={"allowed_gpu","max_hourly_usd","total_budget_usd","max_wall_clock_minutes","max_attempts","oom_policy"}
     failures=[f"missing resource limit: {k}" for k in sorted(req-set(limits))]
-    if isinstance(limits.get("max_hourly_usd"),(int,float)) and limits["max_hourly_usd"]<=0: failures.append("max_hourly_usd must be > 0")
-    if isinstance(limits.get("total_budget_usd"),(int,float)) and limits["total_budget_usd"]<=0: failures.append("total_budget_usd must be > 0")
-    if isinstance(limits.get("max_wall_clock_minutes"),int) and limits["max_wall_clock_minutes"]<=0: failures.append("max_wall_clock_minutes must be > 0")
-    if isinstance(limits.get("max_attempts"),int) and limits["max_attempts"]<=0: failures.append("max_attempts must be > 0")
+    for key in ("max_hourly_usd", "total_budget_usd", "max_wall_clock_minutes", "max_attempts"):
+        value = limits.get(key)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
+            failures.append(f"{key} must be a finite positive number")
+    if not isinstance(limits.get("max_attempts"), int): failures.append("max_attempts must be an integer")
+    if not isinstance(limits.get("allowed_gpu"), str) or not limits["allowed_gpu"].strip(): failures.append("allowed_gpu must be explicit")
     if limits.get("oom_policy") not in {"stop_and_request","same_gpu_retry_only","user_authorized_gpu_change"}: failures.append("invalid oom_policy")
     return failures
 
@@ -147,3 +149,19 @@ def build_finetune_command(config: dict[str, Any], interface: dict[str, Any]) ->
 
 def command_text(command: list[str]) -> str:
     return shlex.join(command)
+
+
+def verify_patched_checkout(checkout: Path, lock: dict[str, Any]) -> str:
+    """Reconstruct the reviewed patch in a temp directory; never patch shared checkout."""
+    expected=lock['upstream']['commit']
+    actual=subprocess.check_output(['git','-C',str(checkout),'rev-parse','HEAD'],text=True).strip()
+    if actual!=expected: raise ValueError('upstream commit mismatch')
+    patch=ROOT/lock['upstream']['patch']
+    if sha256_file(patch)!=lock['upstream']['patch_sha256']: raise ValueError('reviewed patch hash mismatch')
+    original=subprocess.check_output(['git','-C',str(checkout),'show',expected+':finetune.py'])
+    with tempfile.TemporaryDirectory(prefix='member3-source-check-') as directory:
+        target=Path(directory)/'finetune.py';target.write_bytes(original)
+        subprocess.run(['git','apply',str(patch)],cwd=directory,check=True,capture_output=True)
+        expected_hash=sha256_file(target)
+    if sha256_file(checkout/'finetune.py')!=expected_hash: raise ValueError('finetune.py differs from pinned source plus reviewed patch')
+    return expected_hash

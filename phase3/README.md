@@ -1,5 +1,7 @@
 # Phase 3 handoff
 
+**Latest Member 3 results (10 October 2026): [Member 3 completion and team handoff report](MEMBER3_COMPLETION_REPORT_EN.md).** Formal training and checkpoint validation are complete; final Member 3B acceptance and downstream C/Eval80 work remain pending.
+
 This directory contains the shared Phase 3 environment, dataset, and handoff
 contracts. Member 1 owns the pinned runtime and upstream integration. Member 2
 owns the deterministic BridgeTrain-v1 conversion, validation, and training

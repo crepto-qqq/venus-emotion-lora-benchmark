@@ -8,10 +8,11 @@ from common import utc_now
 
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument("--config",type=Path,default=ROOT/"phase3/configs/lora-pilot-v1.json"); ap.add_argument("--suffix",action="append",default=["c_attn","attn.c_proj","w1","w2"]); ap.add_argument("--report",type=Path,required=True); a=ap.parse_args()
+    if a.report.exists(): raise SystemExit("new report path required")
     c=read_json(a.config)
     import torch
     from transformers import AutoModelForCausalLM
-    model=AutoModelForCausalLM.from_pretrained(c["runtime"]["model_path"],trust_remote_code=True,torch_dtype=torch.bfloat16,device_map="cpu")
+    model=AutoModelForCausalLM.from_pretrained(c["runtime"]["model_path"],local_files_only=True,trust_remote_code=True,torch_dtype=torch.bfloat16,device_map="cpu")
     matched=[]; visual=[]
     for name,module in model.named_modules():
         if any(name.endswith(s) for s in a.suffix):

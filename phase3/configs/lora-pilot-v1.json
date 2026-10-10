@@ -17,8 +17,8 @@
     "dataset_id": "BridgeTrain-v1",
     "train_repo_path": "phase3/releases/bridge-train-v1/bridge-train-v1.train.json",
     "validation_repo_path": "phase3/releases/bridge-train-v1/bridge-train-v1.validation.json",
-    "train_path": "/workspace/phase3/releases/bridge-train-v1/bridge-train-v1.train.json",
-    "validation_path": "/workspace/phase3/releases/bridge-train-v1/bridge-train-v1.validation.json",
+    "train_path": "/workspace/phase3/member3/pilot-data/pilot-train.json",
+    "validation_path": "/workspace/phase3/member3/pilot-data/pilot-validation.json",
     "release_hashes": {
       "bridge-train-v1.train.json": "bc6c54aec636d0e56afad30ff5a004b48ccc9bcddbf76d0e91ab419b274df0d8",
       "bridge-train-v1.validation.json": "eafadfc9b6724ad9075a56e521ede4eae0db3ad541b2797c83b4230f4ad8f98b",
@@ -29,8 +29,14 @@
   },
   "pilot_subset": {
     "seed": "member3-lora-pilot-v1",
-    "train_per_class_task": {"classification": 2, "joint_guidance": 1},
-    "validation_per_class_task": {"classification": 10, "joint_guidance": 2}
+    "train_per_class_task": {
+      "classification": 2,
+      "joint_guidance": 1
+    },
+    "validation_per_class_task": {
+      "classification": 10,
+      "joint_guidance": 2
+    }
   },
   "lora": {
     "mode": "lora",

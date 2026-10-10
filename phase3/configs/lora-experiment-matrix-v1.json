@@ -6,7 +6,7 @@
   "allowed_override_fields": ["training.learning_rate"],
   "selection_rule": {
     "required": ["reload_passed", "finite_loss", "classification_exact_match", "guidance_format_valid_rate"],
-    "primary": "lowest_validation_loss",
+    "primary": "lowest_validation_token_weighted_loss",
     "tie_breakers": ["highest_classification_exact_match", "highest_guidance_format_valid_rate", "lowest_elapsed_seconds"]
   },
   "candidates": [

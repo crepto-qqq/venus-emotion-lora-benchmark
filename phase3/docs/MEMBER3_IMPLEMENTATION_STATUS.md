@@ -1,5 +1,7 @@
 # Member 3 implementation status
 
+> Historical preparation or implementation record. For current execution results and remaining actions, read the [Member 3 completion report](../MEMBER3_COMPLETION_REPORT_EN.md), updated 10 October 2026.
+
 ## Repository implementation completed
 The repository now contains the Member 3 offline implementation required by the canonical handoff:
 

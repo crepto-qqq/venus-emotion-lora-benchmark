@@ -66,6 +66,38 @@ def formal_checks(c, interface, review_path):
         r=read_json(review_path)
         fail_if(r.get("decision")!="approved","pilot review decision is not approved",f)
         fail_if(r.get("formal_config_sha256")!=canonical_sha256(c,omit_key="config_sha256"),"pilot review does not bind this formal config",f)
+        if r.get('kind') == 'delegated_formal_decision':
+            f += delegated_review_checks(c, r)
+        else:
+            fail_if(r.get('reviewer_role') != 'Member 3B', 'legacy formal review requires Member 3B identity', f)
+    return f
+
+
+def delegated_review_checks(c, record):
+    """Explicit human decision under reported delegation, not independent 3B review."""
+    f = []
+    for key, expected in (('schema_version', 1), ('reviewer_role', 'delegated_user'),
+                          ('decision_maker', 'Zhiyuan Zhang'), ('human_confirmed', True),
+                          ('independent_member3b_review', False)):
+        mismatch = record.get(key) is not expected if isinstance(expected, bool) else record.get(key) != expected
+        fail_if(mismatch, 'delegated decision invalid: ' + key, f)
+    delegation = record.get('delegation', {})
+    fail_if(delegation.get('source') != 'user_reported_Jackie_delegation' or not delegation.get('statement'),
+            'delegation source and statement required', f)
+    fail_if(record.get('formal_resource_limits') != c.get('resource_limits'),
+            'delegated decision resource limits mismatch', f)
+    fail_if(record.get('release_hashes') != c['data'].get('release_hashes'),
+            'delegated decision release hashes mismatch', f)
+    fail_if(record.get('checkpoint_selection') != c.get('planning_metadata', {}).get('checkpoint_selection'),
+            'delegated decision checkpoint rule mismatch', f)
+    fail_if(not record.get('known_limitations'), 'known quality/evidence limitations required', f)
+    evidence = record.get('reviewed_evidence', [])
+    fail_if(not evidence, 'reviewed evidence files required', f)
+    for item in evidence:
+        path = Path(item.get('path', ''))
+        if not path.is_absolute(): path = ROOT / path
+        fail_if(not path.is_file() or sha256_file(path) != item.get('sha256'),
+                'delegated decision evidence file missing or changed', f)
     return f
 
 def main():
