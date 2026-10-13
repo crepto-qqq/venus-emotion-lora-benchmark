@@ -2,7 +2,7 @@
 
 > English translation of the corresponding Chinese historical record. Statements such as “pending” or “not run” refer to that record’s preparation milestone. For current execution results and remaining actions, read the [Member 3 completion report](../MEMBER3_COMPLETION_REPORT_EN.md), updated 10 October 2026.
 
-Source: [MEMBER3_RESOURCE_GUARDS.md](MEMBER3_RESOURCE_GUARDS.md). Command placeholders in Chinese have been translated into English; actual fixed paths and command options are preserved.
+This English document preserves the historical procedure and status of the original preparation notes. Use the current completion report for executed results.
 
 Status at this historical milestone: local implementation and mock verification completed. No background task was activated, RunPod API contacted or cloud resource started. No real budget authorisation, API key or Pod ID was written into the configuration.
 
