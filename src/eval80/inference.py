@@ -1,4 +1,4 @@
-"""Run one frozen Original Venus Stage 1 condition over approved Eval80-v1."""
+"""Run one frozen Venus Stage 1 condition over approved Eval80-v1."""
 
 from __future__ import annotations
 
@@ -21,6 +21,16 @@ from .core import (
     validate_freeze_record,
     validate_inference_manifest,
 )
+
+
+# This is the checked-in, completed Member 3A run, not Member 3B acceptance.
+FORMAL_C_EVIDENCE_SHA256 = "c2be197d0b79c5b979906433628c5b01c434935c4c992e19a7663839a8aeb8e0"
+FORMAL_C_ATTEMPT_ID = "formal5-20261010-v1"
+FORMAL_C_CHECKPOINT = 180
+FORMAL_C_ADAPTER_FILES = {
+    "adapter_config.json": "809c5b6e2a5334a031399cf50ef7b589a8d4ab46cbeafe9620eb57fe56990d34",
+    "adapter_model.bin": "54363c1a0764d69e6389bfc2556c3f1c93c089da8eda57cd79733afe36f2b440",
+}
 
 
 def _utc_now() -> str:
@@ -71,6 +81,138 @@ def _verify_model_source(model_path: Path, expected: dict[str, Any]) -> dict[str
     return source
 
 
+def _condition_prompt(config: dict[str, Any], condition: str) -> str:
+    """Resolve C's prompt through the frozen B1 entry, never a second copy."""
+    condition_config = config["conditions"][condition]
+    source = condition_config.get("prompt_source_condition", condition)
+    if condition == "C" and source != "B1":
+        raise ValueError("Condition C must inherit the frozen B1 prompt.")
+    prompt = config["conditions"][source].get("prompt")
+    if not prompt:
+        raise ValueError(f"Condition {condition} does not contain an executable prompt.")
+    if condition == "C":
+        b1 = config["conditions"]["B1"]
+        if condition_config["prompt_version"] != b1["prompt_version"]:
+            raise ValueError("Condition C and B1 prompt versions differ.")
+        if condition_config["response_format"] != b1["response_format"]:
+            raise ValueError("Condition C and B1 response formats differ.")
+    return str(prompt)
+
+
+def _expected_adapter_identity(
+    evidence_path: Path, expected_model: dict[str, Any]
+) -> dict[str, Any]:
+    """Bind an adapter to the completed training evidence, without claiming acceptance."""
+    evidence_sha256 = sha256_file(evidence_path)
+    if evidence_sha256 != FORMAL_C_EVIDENCE_SHA256:
+        raise ValueError("Adapter evidence SHA-256 differs from pinned formal attempt.")
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    if (evidence.get("kind"), evidence.get("attempt_id")) != (
+        "member3a_formal_results_summary", FORMAL_C_ATTEMPT_ID
+    ):
+        raise ValueError("Adapter evidence does not identify the pinned formal attempt.")
+    if evidence.get("training_completed") is not True:
+        raise ValueError("Adapter evidence does not record completed training.")
+    if evidence.get("base_revision") != expected_model["revision"]:
+        raise ValueError("Adapter evidence base revision differs from frozen Eval80 base.")
+    selected = evidence.get("selected_checkpoint")
+    if selected != FORMAL_C_CHECKPOINT:
+        raise ValueError("Adapter evidence selected checkpoint is not formal step 180.")
+    candidates = [
+        candidate for candidate in evidence.get("candidates", [])
+        if candidate.get("step") == selected
+    ]
+    if len(candidates) != 1:
+        raise ValueError("Adapter evidence must identify exactly one selected checkpoint.")
+    files = candidates[0].get("adapter_files")
+    if files != FORMAL_C_ADAPTER_FILES:
+        raise ValueError("Selected adapter hashes differ from formal checkpoint 180.")
+    return {
+        "evidence_path": str(evidence_path),
+        "evidence_sha256": evidence_sha256,
+        "selected_checkpoint": selected,
+        "formal_config_sha256": evidence.get("config_sha256"),
+        "base_revision": evidence["base_revision"],
+        "adapter_files": files,
+        "acceptance_status": "not_verified",
+    }
+
+
+def _verify_adapter_files(adapter_path: Path, identity: dict[str, Any]) -> None:
+    for filename, expected_sha in identity["adapter_files"].items():
+        file_path = adapter_path / filename
+        if not file_path.is_file():
+            raise FileNotFoundError(f"Selected adapter file is missing: {filename}")
+        if sha256_file(file_path) != expected_sha:
+            raise ValueError(f"Selected adapter SHA-256 mismatch: {filename}")
+    if (adapter_path / "adapter_model.safetensors").exists():
+        raise ValueError("Unexpected second adapter weight file; refusing ambiguous load.")
+
+
+def _verify_base_snapshot(model_path: Path, project_root: Path,
+                          expected_model: dict[str, Any]) -> dict[str, Any]:
+    """Hash the complete pinned Venus snapshot before loading Condition C."""
+    lock_path = project_root / "phase3/configs/source-lock.json"
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))["model"]
+    if (lock.get("repository"), lock.get("revision"), lock.get("weight_format")) != (
+        expected_model["repo_id"], expected_model["revision"], expected_model["weight_format"]
+    ):
+        raise ValueError("Phase 3 model source lock differs from frozen Eval80 base.")
+    manifest_path = project_root / lock["snapshot_manifest"]
+    manifest_hash = sha256_file(manifest_path)
+    if manifest_hash != lock["snapshot_manifest_sha256"]:
+        raise ValueError("Pinned model snapshot manifest SHA-256 mismatch.")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if (manifest.get("repository"), manifest.get("revision")) != (
+        expected_model["repo_id"], expected_model["revision"]
+    ):
+        raise ValueError("Pinned model snapshot manifest names a different base.")
+    entries = manifest.get("files")
+    if not isinstance(entries, list) or len(entries) != manifest.get("file_count"):
+        raise ValueError("Pinned model snapshot manifest file count is invalid.")
+    total_bytes = 0
+    seen: set[str] = set()
+    for entry in entries:
+        filename = entry.get("path")
+        if not isinstance(filename, str) or Path(filename).name != filename or filename in seen:
+            raise ValueError("Pinned model snapshot manifest has an invalid filename.")
+        seen.add(filename)
+        file_path = model_path / filename
+        if file_path.is_symlink() or not file_path.is_file():
+            raise FileNotFoundError(f"Pinned model snapshot file is missing: {filename}")
+        size = file_path.stat().st_size
+        if size != entry.get("size") or sha256_file(file_path) != entry.get("sha256"):
+            raise ValueError(f"Pinned model snapshot file differs: {filename}")
+        total_bytes += size
+    if total_bytes != manifest.get("total_bytes"):
+        raise ValueError("Pinned model snapshot total bytes differ.")
+    return {"source_lock_sha256": sha256_file(lock_path),
+            "snapshot_manifest_sha256": manifest_hash,
+            "verified_file_count": len(entries), "verified_total_bytes": total_bytes}
+
+
+def _load_adapter_preserving_rng(
+    base_model: Any,
+    adapter_path: Path,
+    generation_config: Any,
+    *,
+    torch_module: Any,
+    peft_model_class: Any,
+) -> Any:
+    """Keep C's sampled stream at the state reached after the shared base load."""
+    cpu_state = torch_module.get_rng_state().clone()
+    cuda_states = [state.clone() for state in torch_module.cuda.get_rng_state_all()]
+    try:
+        model = peft_model_class.from_pretrained(
+            base_model, str(adapter_path), is_trainable=False
+        ).eval()
+        model.generation_config = generation_config
+    finally:
+        torch_module.set_rng_state(cpu_state)
+        torch_module.cuda.set_rng_state_all(cuda_states)
+    return model
+
+
 def _assert_generation_config(actual: dict[str, Any], expected: dict[str, Any]) -> None:
     mismatches = {
         key: {"expected": expected_value, "actual": actual.get(key)}
@@ -87,8 +229,10 @@ def _mean(values: list[float]) -> float | None:
 
 def run_command(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--condition", choices=("A", "B0", "B1"), required=True)
+    parser.add_argument("--condition", choices=("A", "B0", "B1", "C"), required=True)
     parser.add_argument("--model-path", type=Path, required=True)
+    parser.add_argument("--adapter-path", type=Path)
+    parser.add_argument("--adapter-evidence", type=Path)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--image-dir", type=Path, required=True)
     parser.add_argument("--freeze-record", type=Path, required=True)
@@ -108,9 +252,12 @@ def run_command(argv: list[str] | None = None) -> int:
     image_dir = args.image_dir.resolve(strict=True)
     config = json.loads(config_path.read_text(encoding="utf-8"))
     condition_config = config["conditions"][args.condition]
-    prompt = condition_config.get("prompt")
-    if not prompt:
-        raise ValueError(f"Condition {args.condition} does not contain an executable prompt.")
+    prompt = _condition_prompt(config, args.condition)
+    if args.condition == "C":
+        if args.adapter_path is None or args.adapter_evidence is None:
+            raise ValueError("Condition C requires --adapter-path and --adapter-evidence.")
+    elif args.adapter_path is not None or args.adapter_evidence is not None:
+        raise ValueError("Adapter arguments are only valid for Condition C.")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     manifest_errors = validate_inference_manifest(manifest, image_dir, verify_hashes=True)
@@ -131,6 +278,17 @@ def run_command(argv: list[str] | None = None) -> int:
 
     model_path = args.model_path.resolve(strict=True)
     model_source = _verify_model_source(model_path, config["model"])
+    base_snapshot_verification: dict[str, Any] | None = None
+    adapter_path: Path | None = None
+    adapter_identity: dict[str, Any] | None = None
+    if args.condition == "C":
+        base_snapshot_verification = _verify_base_snapshot(
+            model_path, config_path.parents[2], config["model"]
+        )
+        adapter_path = args.adapter_path.resolve(strict=True)
+        evidence_path = args.adapter_evidence.resolve(strict=True)
+        adapter_identity = _expected_adapter_identity(evidence_path, config["model"])
+        _verify_adapter_files(adapter_path, adapter_identity)
     output_dir = args.output_dir.resolve()
     if output_dir.exists() and any(output_dir.iterdir()):
         raise FileExistsError(f"Output directory is not empty; refusing to overwrite: {output_dir}")
@@ -141,6 +299,9 @@ def run_command(argv: list[str] | None = None) -> int:
     import transformers
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from transformers.generation import GenerationConfig
+    if args.condition == "C":
+        import peft
+        from peft import PeftModel
 
     if transformers.__version__ != config["generation"]["transformers_version"]:
         raise RuntimeError(
@@ -171,6 +332,8 @@ def run_command(argv: list[str] | None = None) -> int:
         ),
         "git_head": _run_text_command(["git", "rev-parse", "HEAD"]),
     }
+    if args.condition == "C":
+        environment["peft"] = peft.__version__
     _write_json_atomic(output_dir / "environment.json", environment)
     _write_json_atomic(
         output_dir / "pip_freeze.json",
@@ -203,6 +366,11 @@ def run_command(argv: list[str] | None = None) -> int:
         "generation_expected": config["generation"],
         "model_loading": config["model_loading"],
     }
+    if args.condition == "C":
+        run_config["prompt_source_condition"] = "B1"
+        run_config["adapter_identity"] = adapter_identity
+        run_config["base_snapshot_verification"] = base_snapshot_verification
+        run_config["rng_seed_position"] = "before_shared_base_load"
     _write_json_atomic(output_dir / "run_config.json", run_config)
 
     torch.manual_seed(int(config["seed"]))
@@ -231,6 +399,13 @@ def run_command(argv: list[str] | None = None) -> int:
     generation_actual = generation_config.to_dict()
     _assert_generation_config(generation_actual, config["generation"])
     model.generation_config = generation_config
+    if args.condition == "C":
+        model = _load_adapter_preserving_rng(
+            model, adapter_path, generation_config,
+            torch_module=torch, peft_model_class=PeftModel,
+        )
+        run_config["adapter_load_rng_restored"] = True
+        run_config["adapter_load_rng_scope"] = "cpu_and_all_visible_cuda_devices"
     torch.cuda.synchronize(0)
 
     parameter_devices = sorted({str(parameter.device) for parameter in model.parameters()})
