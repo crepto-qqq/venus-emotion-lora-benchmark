@@ -15,7 +15,9 @@ COMMANDS: dict[str, tuple[str, str]] = {
     "freeze": (".validation", "freeze_command"),
     "run": (".inference", "run_command"),
     "validate-output": (".validation", "validate_output_command"),
+    "audit-format": (".output_contract", "audit_format_command"),
     "score-recognition": (".scoring", "score_recognition_command"),
+    "compare-recognition": (".scoring", "compare_recognition_command"),
     "create-score-sheets": (".scoring", "create_score_sheets_command"),
     "summarize": (".scoring", "summarize_guidance_command"),
 }
@@ -36,7 +38,9 @@ def _print_help() -> None:
         "  freeze              Create the approved label-free package\n"
         "  run                 Run one frozen A, B0, or B1 condition\n"
         "  validate-output     Validate one completed inference attempt\n"
+        "  audit-format        Audit B1 or C structured output compliance\n"
         "  score-recognition   Calculate B0, B1, or C recognition results\n"
+        "  compare-recognition Summarize paired B1/C recognition outcomes\n"
         "  create-score-sheets Create six blind reviewer score sheets\n"
         "  summarize           Validate and summarize completed guidance scores\n\n"
         "Use '<command> --help' for command-specific options."
