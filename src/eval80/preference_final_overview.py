@@ -213,26 +213,31 @@ def build_final_overview(status: dict[str, Any], guidance: dict[str, Any]) -> di
     if dict(Counter(item["error_type"] for item in error_evidence)) != error_types:
         raise ValueError("Recovery error types differ from redacted evidence rows.")
     if lower > 0:
-        direction = "C 在本次 Eval80 自动偏好评审中有稳健的方向优势。"
+        direction = "C has a robust directional advantage in this Eval80 automated preference review."
     elif net > 0:
-        direction = "有效图片的稳定偏好偏向 C，但保守下界未超过零，方向尚不稳健。"
+        direction = ("Stable preferences among included images favor C, but the conservative "
+                     "lower bound does not exceed zero, so the direction is not robust.")
     elif net < 0:
-        direction = "有效图片的稳定偏好偏向 B1，不能称 C 的 guidance 质量提升。"
+        direction = ("Stable preferences among included images favor B1; this does not support "
+                     "a claim that C's guidance quality improved.")
     else:
-        direction = "有效图片没有稳定的净偏好。"
+        direction = "Included images show no stable net preference."
     if reference_only:
         if lower > 0:
-            direction = ("冻结 Gemma 的自动偏好指标支持 C 的稳健方向优势；"
-                         "人类感知的 guidance 质量提升尚未验证。")
+            direction = ("The frozen Gemma automated preference metric supports a robust "
+                         "directional advantage for C; improvement in human-perceived "
+                         "guidance quality remains unverified.")
         elif net > 0:
-            direction = ("冻结 Gemma 在有效图片上的偏好偏向 C，但原 78 张保守下界未超过零；"
-                         "人类感知的 guidance 质量提升尚未验证。")
+            direction = ("Frozen Gemma preferences among included images favor C, but the "
+                         "conservative lower bound over the original 78 images does not exceed "
+                         "zero; improvement in human-perceived guidance quality remains "
+                         "unverified.")
         elif net < 0:
-            direction = ("冻结 Gemma 在有效图片上的稳定偏好偏向 B1；"
-                         "不能称 C 的 guidance 质量提升。")
+            direction = ("Stable frozen Gemma preferences among included images favor B1; "
+                         "this does not support a claim that C's guidance quality improved.")
         else:
-            direction = ("冻结 Gemma 在有效图片上没有稳定净偏好；"
-                         "人类感知的 guidance 质量提升尚未验证。")
+            direction = ("Frozen Gemma shows no stable net preference among included images; "
+                         "improvement in human-perceived guidance quality remains unverified.")
     return {
         "schema_version": 1,
         "evaluation_set": "Eval80-v1",
@@ -293,72 +298,84 @@ def _markdown(report: dict[str, Any]) -> str:
     reference_only = guide["calibration"]["mode"] == "reference_only_unverified"
     if reference_only:
         calibration_paragraph = (
-            "**人工校准未完成。**16 组开发图的人工盲评草稿只作参考；预定的"
-            "双顺序稳定同意及明显幻觉误选门槛无法检验。本次 guidance 分数是冻结 Gemma 的"
-            "相对偏好，不能单独证明人类感知的建议质量提升。"
-            f"草稿 SHA-256：`{guide['calibration']['reference_csv_sha256']}`。"
+            "**Human calibration is incomplete.** The draft human blind review of 16 "
+            "development pairs is reference material only; the planned gates for stable "
+            "agreement across both answer orders and false wins by clearly hallucinated "
+            "answers could not be checked. This guidance metric measures the frozen Gemma "
+            "judge's relative preference and cannot by itself establish an improvement in "
+            "human-perceived advice quality. "
+            f"Draft SHA-256: `{guide['calibration']['reference_csv_sha256']}`."
         )
     else:
         calibration_paragraph = (
-            f"评审器校准：16 组开发图中，人类有明确偏好的 "
-            f"{guide['calibration']['human_clear_count']} 组，Gemma 双顺序稳定同意 "
-            f"{guide['calibration']['clear_agreement_count']} 组"
-            f"（{guide['calibration']['clear_agreement_rate']:.1%}）；"
-            "稳定选择明显幻觉较差答案 0 组。单人小样本校准仅支持本次自动偏好指标，"
-            "不等于专家间一致性或五维审美分数。"
+            f"Judge calibration: among 16 development pairs, the human reviewer expressed "
+            f"a clear preference for {guide['calibration']['human_clear_count']}; Gemma "
+            f"agreed consistently across both answer orders on "
+            f"{guide['calibration']['clear_agreement_count']} "
+            f"({guide['calibration']['clear_agreement_rate']:.1%}). It never consistently "
+            "selected a clearly worse answer containing hallucinations. This small, "
+            "single-reviewer calibration supports only this automated preference metric; "
+            "it does not establish inter-expert agreement or a five-dimensional aesthetic score."
         )
     rate = guide["observed_net_rate"]
-    observed = "不可计算" if rate is None else f"{rate:+.1%}"
+    observed = "not calculable" if rate is None else f"{rate:+.1%}"
     error_table = []
     if guide["recovery_error_evidence"]:
         error_table = [
-            "| 匿名位置 | 尝试 | 错误 | finish_reason | 输出 token / 上限 | 图片最终排除 |",
+            "| Anonymous position | Attempt | Error | finish_reason | Output tokens / limit | Image excluded |",
             "| ---: | ---: | --- | --- | ---: | --- |",
             *[f"| {item['anonymous_position']} | {item['retry_attempt']} | "
-              f"{item['error_type']} | {item['finish_reason'] or '无回复'} | "
+              f"{item['error_type']} | {item['finish_reason'] or 'no response'} | "
               f"{item['completion_tokens'] if item['completion_tokens'] is not None else '—'}"
-              f" / {item['max_tokens']} | {'是' if item['image_excluded'] else '否'} |"
+              f" / {item['max_tokens']} | {'yes' if item['image_excluded'] else 'no'} |"
               for item in guide["recovery_error_evidence"]],
             "",
         ]
     lines = [
-        ("# Eval80 B1/C 最终自动评审（人工校准未完成；含技术故障排除）"
-         if reference_only else "# Eval80 B1/C 最终自动评审（含技术故障排除）"), "",
-        f"**Guidance 结论：**{report['guidance_direction']}", "",
-        "| 指标 | B1 | C | 说明 |", "| --- | ---: | ---: | --- |",
-        f"| 完整输出格式 | {fmt['B1_pass_count']}/80 | {fmt['C_pass_count']}/80 | 确定性检查 |",
-        f"| 严格情绪识别 | {rec['B1_correct_count']}/80 | {rec['C_correct_count']}/80 | B1 缺少必填字段，受格式差异混淆 |",
-        f"| 开头 `Emotion:` 字段准确 | {opening['B1_correct_count']}/80 | {opening['C_correct_count']}/80 | 同字段补充诊断；C 净增 {opening['net_correct_gain_c_minus_b1']}/80 |",
-        "", "## 图像感知 guidance 自动偏好", "",
-        f"有效图片 **{guide['included_images']}/78**；技术故障整图排除 **{guide['technical_excluded_images']}** 张。"
-        f"双顺序共识：C 胜 **{guide['C_wins']}**、B1 胜 **{guide['B1_wins']}**、"
-        f"平手 **{guide['ties']}**、顺序不稳定 **{guide['order_unstable']}**。", "",
-        f"有效图片净偏好差 `(C胜−B1胜)/有效张数` = **{observed}**。"
-        f"原 78 张保守下界（全部不稳定和排除图按 B1 胜处理）= "
-        f"**{guide['worst_case_net_rate_original_scope']:+.1%}**。", "",
+        ("# Eval80 B1/C final automated review (human calibration incomplete; technical exclusion)"
+         if reference_only else "# Eval80 B1/C final automated review (technical exclusion)"), "",
+        f"**Guidance conclusion:** {report['guidance_direction']}", "",
+        "| Metric | B1 | C | Interpretation |", "| --- | ---: | ---: | --- |",
+        f"| Complete output format | {fmt['B1_pass_count']}/80 | {fmt['C_pass_count']}/80 | Deterministic check |",
+        f"| Strict emotion recognition | {rec['B1_correct_count']}/80 | {rec['C_correct_count']}/80 | Confounded by B1's missing required field |",
+        f"| Opening `Emotion:` field accuracy | {opening['B1_correct_count']}/80 | {opening['C_correct_count']}/80 | Same-field supplemental diagnostic; C gains {opening['net_correct_gain_c_minus_b1']}/80 net |",
+        "", "## Image-aware automated guidance preference", "",
+        f"Included images: **{guide['included_images']}/78**; whole images excluded for technical failure: "
+        f"**{guide['technical_excluded_images']}**. Consensus across both answer orders: "
+        f"C wins **{guide['C_wins']}**, B1 wins **{guide['B1_wins']}**, "
+        f"ties **{guide['ties']}**, and order-unstable outcomes **{guide['order_unstable']}**.", "",
+        f"Observed net preference among included images, `(C wins − B1 wins) / included images`, "
+        f"is **{observed}**. The conservative lower bound over the original 78 images "
+        f"(assigning every unstable and excluded image to B1) is "
+        f"**{guide['worst_case_net_rate_original_scope']:+.1%}**.", "",
         calibration_paragraph, "",
-        "评审器同时看到原图、目标情绪和两份完整回答，提示词比较视觉依据、建议可操作性及情绪适配。"
-        "B1/C 的回答格式也不同，因此此偏好指标不能完全隔离指导内容与表达格式的影响。", "",
-        "| 目标情绪 | 有效图片 | 技术排除 |", "| --- | ---: | ---: |",
+        "The judge sees the source image, target emotion, and both complete answers. Its prompt "
+        "compares visual grounding, actionability, and emotional fit. B1 and C also differ "
+        "in answer format, so this preference metric cannot fully isolate guidance content "
+        "from presentation format.", "",
+        "| Target emotion | Included images | Technical exclusions |", "| --- | ---: | ---: |",
         *[f"| {emotion} | {counts['included']} | {counts['excluded']} |"
           for emotion, counts in sorted(guide["emotion_coverage"].items())],
         "",
-        "技术排除涉及匿名评审位置 "
-        + ", ".join(map(str, guide["technical_excluded_anonymous_positions"])) + "。", "",
-        "新运行的技术错误调用：" + (
-            "无。" if not guide["recovery_error_evidence"] else "见下表。"), "",
+        "Technical exclusions affect anonymous review positions "
+        + ", ".join(map(str, guide["technical_excluded_anonymous_positions"])) + ".", "",
+        "Technical errors during the recovery run: " + (
+            "none." if not guide["recovery_error_evidence"] else "see table below."), "",
         *error_table,
-        f"恢复运行尝试日志 SHA-256：`{guide['recovery_attempts_sha256']}`。", "",
-        f"本次方法在两次全集技术失败后修订。验证并继承 attempt 002 的 "
-        f"{guide['attempt002_valid_decisions_inherited']} 条有效盲判；其中 "
-        f"{guide['attempt002_decisions_used_after_exclusion']} 条属于最终保留图片，"
-        f"新完成 {guide['new_decisions_used_after_exclusion']} 条有效判断。"
-        "技术失败图片的两个顺序均不计分。"
-        "[故障证据附录](../../Docs/evaluation/EVAL80_PREFERENCE_FAILURE_EVIDENCE_CN.md)"
-        "提供原始日志哈希和脱敏可视化；"
-        "当时没有保存现场截图。", "",
-        "这项自动偏好分数衡量同图两份建议的相对表现，不是原六人五维 /10 Guidance Score。"
-        "本结果仍待用户检查；Member 3B 验收及替换原人工终点的协议修订需另行记录。", "",
+        f"The method was amended after two technical failures of full-scope runs. We "
+        f"verified and inherited {guide['attempt002_valid_decisions_inherited']} valid blind "
+        f"decisions from attempt 002. Of these, "
+        f"{guide['attempt002_decisions_used_after_exclusion']} belong to images retained in "
+        f"the final analysis; {guide['new_decisions_used_after_exclusion']} valid decisions "
+        "were completed in the recovery run. Neither answer order for the image with a "
+        "technical failure was scored. The "
+        "[failure evidence appendix](../../Docs/evaluation/EVAL80_PREFERENCE_FAILURE_EVIDENCE.md) "
+        "contains raw log hashes and redacted visualizations; no screenshot was captured "
+        "at the time of the incident.", "",
+        "This automated preference score measures the relative performance of two answers "
+        "to the same image. It is not the original six-reviewer, five-dimensional /10 "
+        "Guidance Score. This generated report awaits user review; Member 3B acceptance "
+        "and any amendment replacing the original human endpoint require separate records.", "",
     ]
     return "\n".join(lines)
 

@@ -91,7 +91,7 @@ class FinalPreferenceOverviewTests(unittest.TestCase):
             "max_tokens": 2048, "image_excluded": False,
         }]
         report = build_final_overview(status, guidance)
-        self.assertIn("| 151 | 1 | OSError | 无回复 | — / 2048 | 否 |", _markdown(report))
+        self.assertIn("| 151 | 1 | OSError | no response | — / 2048 | no |", _markdown(report))
 
     def test_reference_only_review_discloses_missing_human_calibration(self):
         status, guidance = self._inputs()
@@ -107,8 +107,8 @@ class FinalPreferenceOverviewTests(unittest.TestCase):
         }
         report = build_final_overview(status, guidance)
         markdown = _markdown(report)
-        self.assertIn("人工校准未完成", markdown)
-        self.assertIn("人类感知的 guidance 质量提升尚未验证", markdown)
+        self.assertIn("human calibration incomplete", markdown)
+        self.assertIn("human-perceived guidance quality remains unverified", markdown)
         self.assertIsNone(report["provenance"]["calibration_gate_sha256"])
         false_claim = copy.deepcopy(guidance)
         false_claim["calibration"]["clear_agreement_count"] = 10

@@ -269,18 +269,18 @@ def _markdown(report: dict[str, Any]) -> str:
     fmt, rec = report["format"], report["strict_recognition"]
     opening, guidance = report["opening_emotion_diagnostic"], report["guidance_preference_proxy"]
     lines = [
-        "# Eval80 B1/C benchmark 状态 / status — 暂定",
+        "# Eval80 B1/C benchmark status — provisional",
         "",
-        "**结论 / Result:** C 的格式及开头 `Emotion:` 识别指标高于 B1；guidance 质量提升尚无有效自动分数。",
+        "**Result:** C scores higher than B1 on full-schema compliance and opening `Emotion:` accuracy; no valid automated score for guidance quality improvement is available.",
         "",
-        "| 指标 / Measure | B1 | C | 解释 / Scope |",
+        "| Measure | B1 | C | Scope |",
         "| --- | ---: | ---: | --- |",
-        f"| 完整输出格式 / Full schema | {fmt['B1_pass_count']}/80 | {fmt['C_pass_count']}/80 | 确定性 / deterministic |",
-        f"| 严格情绪识别 / Strict recognition | {rec['B1_correct_count']}/80 | {rec['C_correct_count']}/80 | B1 缺少必填 `Final emotion`，此行受格式混淆 / format-confounded |",
-        f"| 开头 `Emotion:` 准确 / Opening label | {opening['B1_correct_count']}/80 | {opening['C_correct_count']}/80 | 同字段补充诊断，+{opening['net_correct_gain_c_minus_b1']}/80；非正式协议指标 / exploratory |",
-        "| Guidance 质量 / Guidance quality | — | — | 自动偏好评审技术失败，分数不可用 / unavailable |",
+        f"| Full output schema | {fmt['B1_pass_count']}/80 | {fmt['C_pass_count']}/80 | Deterministic |",
+        f"| Strict emotion recognition | {rec['B1_correct_count']}/80 | {rec['C_correct_count']}/80 | B1 omits the required `Final emotion` field; this row is confounded by format |",
+        f"| Opening `Emotion:` accuracy | {opening['B1_correct_count']}/80 | {opening['C_correct_count']}/80 | Supplementary same-field diagnostic, +{opening['net_correct_gain_c_minus_b1']}/80; exploratory, not a protocol metric |",
+        "| Guidance quality | — | — | Automated preference judging failed technically; score unavailable |",
         "",
-        "**Guidance 运行证据 / Judge attempts:** 78 张图片，每张交换 A/B 顺序，计划 156 次判定。两次从头运行各完成 149/156 次，随后各有两次连续回复达到冻结输出上限；没有 156/156 的决策锁。149 条局部判定没有揭盲或计分。",
+        "**Judge-attempt evidence:** The plan covered 78 images with both A/B orders, for 156 decisions. Each of two fresh runs completed 149/156 decisions, then produced two consecutive replies that reached the frozen output cap. Neither run produced a 156/156 decision lock. The 149 partial decisions were neither unblinded nor scored.",
         "",
     ]
     for index, attempt in enumerate(guidance["attempts"], start=1):
@@ -291,11 +291,11 @@ def _markdown(report: dict[str, Any]) -> str:
         )
     lines.extend([
         "",
-        f"**限制 / Limits:** 严格识别的 {rec['B1_correct_count']}→{rec['C_correct_count']}/80 不能单独解释为真实情绪识别提升，因为 B1 在全部 80 条中缺少必填字段。开头标签 {opening['B1_correct_count']}→{opening['C_correct_count']}/80（+{opening['net_correct_gain_c_minus_b1']}）是补充、同字段检查；它不评价建议质量。当前不能声称 guidance 改善，也不能把缺失值写成零。",
+        f"**Limits:** The strict-recognition change from {rec['B1_correct_count']} to {rec['C_correct_count']}/80 alone cannot establish improved emotion recognition because B1 omits the required field in all 80 outputs. The opening-label change from {opening['B1_correct_count']} to {opening['C_correct_count']}/80 (+{opening['net_correct_gain_c_minus_b1']}) is a supplementary same-field check; it does not assess guidance quality. This incomplete attempt cannot support a claim of guidance improvement or treat a missing score as zero.",
         "",
-        "**验收 / Acceptance:** C 推理和确定性指标已完成技术检查；Member 3B 记录仍未核实，等待用户检查后再决定正式验收。不得用本次冻结 Eval80 结果选择 checkpoint 或重新训练。",
+        "**Acceptance:** C inference and deterministic metrics passed technical checks; the Member 3B record remains unverified, and formal acceptance awaits user review. Do not use these frozen Eval80 results to select a checkpoint or retrain.",
         "",
-        "**来源 / Provenance:**",
+        "**Provenance:**",
         "",
         f"- B1 records SHA-256: `{report['provenance']['source_records_sha256']['B1']}`",
         f"- C records SHA-256: `{report['provenance']['source_records_sha256']['C']}`",

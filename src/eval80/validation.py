@@ -361,8 +361,9 @@ def freeze_command(argv: list[str] | None = None) -> int:
     if "TODO" in handbook_text or "- [ ]" in handbook_text:
         raise RuntimeError("The scoring handbook still contains TODO fields or unchecked items.")
     reading_copy_text = args.reading_copy.read_text(encoding="utf-8")
-    if "状态：已冻结" not in reading_copy_text.splitlines():
-        raise RuntimeError("The Chinese scoring handbook must contain the line '状态：已冻结'.")
+    chinese_frozen_status = "\u72b6\u6001\uff1a\u5df2\u51bb\u7ed3"
+    if chinese_frozen_status not in reading_copy_text.splitlines():
+        raise RuntimeError("The Chinese scoring handbook is missing its required frozen-status line.")
 
     selection = read_selection_manifest(args.selection_manifest)
     errors = validate_selection_manifest(selection, args.image_dir, verify_hashes=True)

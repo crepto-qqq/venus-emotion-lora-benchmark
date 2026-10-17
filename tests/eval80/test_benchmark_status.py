@@ -143,7 +143,7 @@ class BenchmarkStatusTests(unittest.TestCase):
             self.assertNotIn("item-149", output)
             self.assertIn("35/80", markdown)
             self.assertIn("149/156", markdown)
-            self.assertIn("guidance 质量提升尚无有效自动分数", markdown)
+            self.assertIn("no valid automated score for guidance quality improvement is available", markdown)
 
     def test_rejects_changed_source_or_unlocked_partial_promoted_to_lock(self):
         with TemporaryDirectory() as temporary:
