@@ -493,6 +493,8 @@ def score_recognition_command(argv: list[str] | None = None) -> int:
         structured=args.condition in {"B1", "C"},
     )
     summary["condition"] = args.condition
+    summary["records_sha256"] = sha256_file(args.records)
+    summary["selection_manifest_sha256"] = sha256_file(args.selection_manifest)
     for row in scored:
         row["condition"] = args.condition
 
@@ -503,6 +505,7 @@ def score_recognition_command(argv: list[str] | None = None) -> int:
         writer = csv.DictWriter(handle, fieldnames=list(scored[0].keys()))
         writer.writeheader()
         writer.writerows(scored)
+    summary["details_sha256"] = sha256_file(details_path)
     (output_dir / f"{args.condition}_recognition_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
