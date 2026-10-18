@@ -369,7 +369,7 @@ def _markdown(report: dict[str, Any]) -> str:
         f"the final analysis; {guide['new_decisions_used_after_exclusion']} valid decisions "
         "were completed in the recovery run. Neither answer order for the image with a "
         "technical failure was scored. The "
-        "[failure evidence appendix](../../Docs/evaluation/EVAL80_PREFERENCE_FAILURE_EVIDENCE.md) "
+        "[failure evidence appendix](../../work_records/evaluation/EVAL80_PREFERENCE_FAILURE_EVIDENCE.md) "
         "contains raw log hashes and redacted visualizations; no screenshot was captured "
         "at the time of the incident.", "",
         "This automated preference score measures the relative performance of two answers "
