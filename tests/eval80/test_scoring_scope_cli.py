@@ -18,7 +18,7 @@ from src.eval80.scoring import GUIDANCE_COLUMNS, REVIEWER_IDS
 
 EXCLUSION = (
     Path(__file__).resolve().parents[2]
-    / "Docs/evaluation/EVAL80_DISPLAY_EXCLUSION.json"
+    / "Docs/evaluation/supporting/protocols/EVAL80_DISPLAY_EXCLUSION.json"
 )
 
 

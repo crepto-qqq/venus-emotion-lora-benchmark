@@ -1243,7 +1243,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--eval80-freeze-record",
         type=Path,
-        default=root / "Docs/evaluation/EVAL80_FREEZE_RECORD.json",
+        default=root / "Docs/evaluation/supporting/protocols/EVAL80_FREEZE_RECORD.json",
     )
     parser.add_argument(
         "--image-reference-root",

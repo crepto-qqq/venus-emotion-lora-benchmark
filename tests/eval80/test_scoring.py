@@ -19,7 +19,7 @@ class Eval80ScoringTests(unittest.TestCase):
     def setUpClass(cls):
         cls.guidance_scope = read_guidance_scope(
             Path(__file__).resolve().parents[2]
-            / "Docs/evaluation/EVAL80_DISPLAY_EXCLUSION.json"
+            / "Docs/evaluation/supporting/protocols/EVAL80_DISPLAY_EXCLUSION.json"
         )
 
     def labels(self):
