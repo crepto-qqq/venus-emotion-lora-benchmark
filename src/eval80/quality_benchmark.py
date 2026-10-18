@@ -27,9 +27,9 @@ from .scoring import GUIDANCE_COLUMNS, read_guidance_scope
 
 
 _ROOT = Path(__file__).resolve().parents[2]
-_FREEZE = _ROOT / "Docs/evaluation/EVAL80_FREEZE_RECORD.json"
-_EXCLUSION = _ROOT / "Docs/evaluation/EVAL80_DISPLAY_EXCLUSION.json"
-_HANDBOOK = _ROOT / "Docs/evaluation/EVAL80_SCORING_HANDBOOK.md"
+_FREEZE = _ROOT / "Docs/evaluation/supporting/protocols/EVAL80_FREEZE_RECORD.json"
+_EXCLUSION = _ROOT / "Docs/evaluation/supporting/protocols/EVAL80_DISPLAY_EXCLUSION.json"
+_HANDBOOK = _ROOT / "Docs/evaluation/supporting/protocols/EVAL80_SCORING_HANDBOOK.md"
 _CONFIG = _ROOT / "configs/phase1/eval80.json"
 _MANIFEST = _ROOT / "results/phase2/eval80/frozen_inputs/inference_manifest.json"
 _SCORE_KEYS = tuple(column.removesuffix("_0_2") for column in GUIDANCE_COLUMNS)

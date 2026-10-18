@@ -94,7 +94,7 @@ class GuidanceJudgeTests(unittest.TestCase):
             },
         })
         exclusion = root / "exclusion.json"
-        official_exclusion = Path(__file__).resolve().parents[2] / "Docs/evaluation/EVAL80_DISPLAY_EXCLUSION.json"
+        official_exclusion = Path(__file__).resolve().parents[2] / "Docs/evaluation/supporting/protocols/EVAL80_DISPLAY_EXCLUSION.json"
         exclusion.write_bytes(official_exclusion.read_bytes())
         judge_config = root / "judge_config.json"
         _dump(judge_config, {

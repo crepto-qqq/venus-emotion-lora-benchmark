@@ -34,7 +34,7 @@ _EXTRA_HEADING_RE = re.compile(
     r"^(?:#{1,6}[ \t]+\S.*|[A-Za-z][A-Za-z0-9 /&()'_-]{0,70}:)$"
 )
 _REPO_ROOT = Path(__file__).resolve().parents[2]
-_FREEZE_RECORD = _REPO_ROOT / "Docs" / "evaluation" / "EVAL80_FREEZE_RECORD.json"
+_FREEZE_RECORD = _REPO_ROOT / "Docs" / "evaluation" / "supporting" / "protocols" / "EVAL80_FREEZE_RECORD.json"
 
 
 def check_structured_response(response: str) -> tuple[str, ...]:

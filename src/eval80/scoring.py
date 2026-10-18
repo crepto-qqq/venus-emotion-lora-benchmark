@@ -29,7 +29,7 @@ REVIEWER_IMAGE_COUNTS = {reviewer_id: 13 for reviewer_id in REVIEWER_IDS}
 CONDITIONS = ("A", "B0", "B1", "C")
 ALL_BLIND_IDS = frozenset(f"E{index:03d}" for index in range(1, 81))
 FREEZE_RECORD_PATH = (
-    Path(__file__).resolve().parents[2] / "Docs/evaluation/EVAL80_FREEZE_RECORD.json"
+    Path(__file__).resolve().parents[2] / "Docs/evaluation/supporting/protocols/EVAL80_FREEZE_RECORD.json"
 )
 FAILURE_FLAGS = {
     "hallucination",
