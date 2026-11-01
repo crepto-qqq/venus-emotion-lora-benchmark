@@ -1,50 +1,21 @@
-# Architecture and experiment flow
+# Architecture and completed experiment flow
 
-## End-to-end view
+## Data and training
 
-```mermaid
-flowchart LR
-    S[Approved image sources] --> A[Emotion annotation pipeline]
-    A --> Q[Quota and schema validation]
-    Q --> D[Hash deduplication]
-    D --> L[Eval20 and Eval80 leakage checks]
-    L --> B[BridgeTrain-v1 release]
-    B --> T[Train: 400 images]
-    B --> V[Validation: 80 images]
-    T --> P[Qwen-VL plus PEFT/LoRA preparation]
-    V --> P
-    P --> G[H100 NVL BF16 forward/backward validation]
+The annotation pipeline prepares structured records, enforces emotion quotas and schemas, removes duplicate images and checks Eval20/Eval80 isolation. BridgeTrain separates 400 training images from 80 validation images.
 
-    E[Eval80-v1: 80 frozen images] --> C1[A: official baseline]
-    E --> C2[B0: unstructured emotion prompt]
-    E --> C3[B1: structured emotion prompt]
-    C1 --> O[Output and schema validation]
-    C2 --> O
-    C3 --> O
-    O --> R[Anonymous scoring package]
-```
+The LoRA workflow obtains the separately licensed base model, checks visual inputs and target modules, freezes the visual backbone and prepares PEFT adapters. Formal training adds configuration checks, microbatch/optimiser telemetry, checkpoint writing, clean-process reload validation and resource/watchdog controls.
 
-## Evaluation contract
+The successful formal run completed 180 optimiser steps and produced checkpoints 60, 120 and 180. Validation selected checkpoint 180. Earlier zero-step forward/backward checks remain distinct from that completed training run.
 
-Eval80-v1 was treated as a frozen contract rather than an informal image folder:
+## Frozen evaluation
 
-1. Validate image identities, labels, category quotas, and hashes.
-2. Pin the model snapshot, prompt version, generation parameters, and random seed.
-3. Run one condition through the same CLI entry point.
-4. Validate exactly 80 structurally complete outputs.
-5. Preserve configuration, logs, outputs, and acceptance evidence together.
-6. Randomise conditions before human scoring to reduce evaluator bias.
+Eval80 uses consistent input identities, model/generation configuration and output validation. Conditions A, B0 and B1 vary prompting; C adds the selected adapter to B1's prompt and generation protocol. Emotion recognition covers 80 images, while the final guidance scoring scope covers 78.
 
-## LoRA readiness boundary
+Quality/preference tooling checks output structure, prepares anonymous scoring, validates submitted records and aggregates results. The six-person review covers 312 answers and 1,560 dimension scores. Human results, automated judge comparisons and recognition accuracy remain separate measures.
 
-The pipeline reached all of the following:
+## Public and private boundaries
 
-- deterministic training and validation data release;
-- PEFT LoRA injection;
-- visual-tower freezing;
-- targeted-module and trainable-parameter validation;
-- real-image BF16 forward and backward execution;
-- non-zero-gradient verification.
+This repository includes orchestration, validation, schemas and testable engineering components. Images, private frozen manifests, generated releases, model/adapter weights, complete answers and reviewer records remain outside the public checkout. Full historical integration tests require some of these inputs and the original runtime; the root README gives a verified self-contained public subset.
 
-It did **not** reach optimiser updates, a completed training run, or a saved adapter checkpoint. This boundary is stated explicitly so the portfolio remains technically accurate.
-
+Configuration and deterministic records support reproducibility, but the executed formal run did not explicitly seed adapter initialisation before PEFT creation. Bitwise reproduction and complete independence of team review are not claimed.

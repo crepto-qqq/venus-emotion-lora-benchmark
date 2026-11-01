@@ -1,112 +1,70 @@
-# Venus Emotion-Aware LoRA Infrastructure & Model Benchmarking
+# Venus Emotion Aware LoRA Development and Model Comparison
 
-> 基于 Venus 的情绪感知 LoRA 基础设施开发与原模型对比评测
+> 基于 Venus 的情绪 LoRA Adapter 开发与原模型对比评测
 
-This repository is a public source portfolio derived from a six-person University of Sydney SOFT3888 capstone project. The project explored how emotion-aware prompting and parameter-efficient fine-tuning could improve multimodal image-aesthetic guidance and cropping.
+A completed six-person University of Sydney SOFT3888 project exploring emotion-aware multimodal aesthetic guidance and cropping. This repository publishes the team's retained engineering source and filtered development history, with third-party source, image datasets, model weights and private review records excluded.
 
-It contains a filtered history of the team-authored engineering work that Tian Liao led or implemented. Upstream Venus/Qwen code, restricted datasets, model weights, generated evaluation outputs, assessment administration material, and private team documents are not included.
+Refreshed on **2 November 2026** from the school's committed `main` at [`f1b6bca`](https://github.sydney.edu.au/tsin0599/SOFT3888_TU12_01_P15/commit/f1b6bcaa66e6da7cfccfc429051e6bcf873f87d2). The school link requires access. Unlike the earlier portfolio snapshot, **formal LoRA training, checkpoint validation, Stage C inference and final team evaluation have now been completed**. See [source provenance](SOURCE_ORIGIN.md).
 
-## Project snapshot
+## What was built
 
-| Item | Summary |
+- A Python CLI for frozen-input inference, output validation, benchmark aggregation and scoring workflows.
+- Emotion-annotation and BridgeTrain preparation with quotas, deduplication, schemas and evaluation-set isolation.
+- PEFT/LoRA preparation, formal training, telemetry, checkpoint validation and bounded cloud-resource controls.
+- Condition C adapter inference and image-aware quality/preference evaluation tools.
+- Reproducible environment definitions, handover contracts, tests and engineering runbooks.
+
+The core stack is Python, PyTorch, Qwen-VL, PEFT/LoRA, Linux/Shell and RunPod. Venus, Qwen and EmoSet are upstream systems/data, not original team work.
+
+## Completed training and validation
+
+The successful formal run used H100 SXM 80 GB, BF16 and LoRA rank 8 / alpha 16 / dropout 0.05. It completed **3 epochs, 1,440 microbatches and 180 optimiser steps** on 480 training conversations from 400 unique images. The complete private BridgeTrain release contains 576 conversations and 480 images including validation.
+
+Checkpoints 60, 120 and 180 were saved and loaded in separate validation processes. The selected checkpoint 180 achieved **62/80 classification exact matches** and **16/16 valid guidance formats** on the independent BridgeTrain validation set. Format validity is not a measure of guidance quality. Its acceptance record was completed on 19 October by Tian after taking over the review role; this is not presented as an independent teammate's sign-off.
+
+The [formal-run record](phase3/docs/MEMBER3_FORMAL_RESULTS_2026-10-10.md) retains the contemporaneous results and caveats. Its then-pending acceptance status is historical. Adapter initialisation was not fully seed-controlled in that executed workflow, so bitwise reproducibility is not claimed.
+
+## Comparison and final evaluation
+
+| Condition | Definition |
 |---|---|
-| Project context | University of Sydney SOFT3888 capstone, six-person team |
-| Tian's roles | Programmer, tester, customer liaison, evaluation/data pipeline contributor, and Phase 3 handoff owner |
-| Core stack | Python, PyTorch, Qwen-VL, PEFT/LoRA, RunPod, Linux/Shell, `unittest` |
-| Evaluation | Eval80-v1: 80 images across 8 emotion categories |
-| Data pipeline | 480 unique images and 576 Qwen-VL conversations in the private project release |
-| GPU validation | H100 NVL, BF16 forward/backward technical validation |
-| Public history | 29 source-relevant Tian commits retained from 35 original Tian commits |
+| A | Released Venus prompt |
+| B0 | Unstructured joint emotion-and-guidance prompt |
+| B1 | Structured joint emotion-and-guidance prompt |
+| C | B1 prompt and generation protocol plus the selected LoRA adapter |
 
-## Problem and approach
+Emotion recognition uses the fixed 80-image Eval80 set. The final guidance-scoring scope uses 78 images, with two predefined exclusions applying only to guidance.
 
-The project studied whether explicit emotion conditioning could improve multimodal aesthetic guidance while preserving reproducibility and evaluation integrity.
+Six team reviewers scored **312 answers** across the four conditions. On this fixed set, C averaged **8.29/10**, compared with **5.04/10** for B1; the paired difference calculated before rounding was **+3.26**. C scored higher on 68 images, tied on 7 and lower on 3.
 
-The comparison design contained four conditions:
+These are small-sample, internal team ratings, with one reviewer assigned per image, not an independent external benchmark or statistical-significance claim. C also had more hallucination flags (**26/78 versus 11/78** for B1). The result supports improved usefulness/emotion-focused guidance on this set, not uniformly better factual grounding. Automated judge scores remain a separate analysis and are not averaged with human ratings or recognition accuracy.
 
-- **A — Official baseline:** the released Venus prompt.
-- **B0 — Unstructured emotion prompt:** emotion recognition and guidance requested jointly.
-- **B1 — Structured emotion prompt:** the same task with a constrained structured response.
-- **C — LoRA condition:** B1 plus a planned emotion-aware LoRA adapter.
-
-A, B0, and B1 each produced 80 outputs and passed 80/80 technical acceptance in the private experiment, for 240 validated outputs in total. Condition C reached data, environment, PEFT injection, parameter, gradient, and GPU runtime validation. Formal optimiser training and adapter checkpoint production were not completed at the documented handoff point.
-
-## Engineering highlights
-
-### Reproducible evaluation workflow
-
-- Built a Python CLI covering preflight checks, frozen-input loading, inference execution, output validation, blind score-sheet preparation, and summary generation.
-- Locked model snapshots, generation settings, random seeds, environment versions, and result hashes for repeatable cloud execution.
-- Added checks for missing records, duplicate samples, schema violations, label leakage, configuration drift, and unexpected hash changes.
-- Preserved the RunPod/Linux wrappers used for A/B0/B1 execution and technical acceptance without publishing their restricted outputs.
-
-### Emotion-aware training-data pipeline
-
-- Produced BridgeTrain-v1 in the private project with 400 training images, 80 independent validation images, and 576 structured multimodal conversations.
-- Enforced quotas across 8 emotion classes, hash-based deduplication, train/validation separation, and exclusion of every Eval20 and Eval80 image.
-- Used schema validation and deterministic packaging to make the handoff auditable.
-- Published the pipeline and contracts here while excluding the underlying images, annotations, and generated release artefacts.
-
-### LoRA infrastructure validation
-
-- Adapted the Venus/Qwen-VL workflow for PEFT LoRA injection while freezing the visual tower.
-- Pinned Python, PyTorch, CUDA, model, and upstream-source versions for a reproducible RunPod environment.
-- On an H100 NVL, completed a real-image BF16 forward/backward validation and verified:
-  - 128 targeted LoRA modules;
-  - 3,506,176 trainable parameters;
-  - non-zero gradients through the intended trainable path.
-
-This demonstrates training-pipeline readiness; it does not claim a completed fine-tuned adapter.
-
-## Repository layout
+## Source layout
 
 | Path | Purpose |
 |---|---|
-| `src/eval80/` | Reproducible evaluation, inference orchestration, scoring, and validation |
-| `src/datasets/` | Emotion annotation and BridgeTrain release validation |
-| `src/phase1/` | Baseline execution, cropping, manifests, and score-sheet preparation |
-| `phase3/tools/` | LoRA environment, snapshot, smoke-test, and handoff verification tools |
-| `phase3/contracts/` | Machine-readable schemas for data and execution evidence |
-| `scripts/eval80/runpod/` | Cloud execution and acceptance wrappers |
-| `tests/`, `phase3/tests/` | Automated unit and contract tests |
-| `environment/`, `phase3/environment/` | Reproducible dependency and runtime definitions |
+| `src/eval80/` | Inference, validation, recognition/quality/preference benchmarks and aggregation |
+| `src/datasets/` | Annotation processing and BridgeTrain construction |
+| `src/phase1/` | Baseline workflow, image cropping and manifests |
+| `phase3/tools/` | LoRA training, telemetry, checkpoint validation, environment and resource guards |
+| `phase3/contracts/` | Data, training and runtime schemas |
+| `tests/`, `phase3/tests/` | Unit, integration and historical contract tests |
+| `environment/`, `phase3/environment/` | Dependency and runtime definitions |
 
-## Public snapshot boundary
+## Public checkout and tests
 
-This repository is a historical, sanitised source snapshot—not a self-contained redistribution of the complete research environment. The included unit and contract tests exercise the public code, but the original end-to-end experiment cannot be rerun unchanged from this checkout alone:
+This is a reviewed source portfolio, not a self-contained redistribution of the research environment. Obtain upstream code/models and licensed data separately under their own terms. Private manifests, images, checkpoints, raw outputs and reviewer sheets are not supplied. Historical scripts that refer to those inputs will not run unchanged from this checkout alone.
 
-- private dataset records, images, manifests, evaluation handbooks, outputs, and reports are deliberately omitted;
-- the reviewed Qwen compatibility patch is described and hash-pinned, but not redistributed with this portfolio;
-- Venus/Qwen source and model files must be obtained separately under their own terms;
-- historical RunPod scripts preserve the original interfaces and paths, so commands requiring omitted inputs will stop rather than substitute fabricated data.
+On 2 November 2026, the following **76 self-contained tests passed** on Windows with the local Python environment, without failures or skips:
 
-## Verification
-
-Run the public-source test suites from the repository root:
-
-```bash
-python -m unittest discover -s tests -v
-python -m unittest discover -s phase3/tests -v
+```text
+python -B -m unittest tests.datasets.test_annotation_pipeline tests.datasets.test_bridge_train tests.eval80.test_benchmark_status tests.eval80.test_cli tests.eval80.test_compare_recognition tests.eval80.test_core tests.eval80.test_preference_final_overview tests.eval80.test_preference_overview tests.eval80.test_preference_recovery tests.eval80.test_validation tests.phase1.test_crop tests.phase1.test_manifest tests.phase1.test_scoring tests.phase1.test_selection phase3.tests.test_formal_bundle phase3.tests.test_runtime_contracts -v
 ```
 
-The core suite contains 48 passing tests. On Windows in this public checkout, the Phase 3 suite passes seven public contract tests and explicitly skips three checks: two require the private dataset fixture and one verifies POSIX-only filesystem semantics. No fake replacement data is included.
+Full historical discovery was also attempted and **does not pass in this public checkout**. The core discovery reported 100 tests with 22 error events; Phase 3 reported 97 tests, 2 failures, 41 error events and 10 skips. Those suites depend on omitted private inputs/evidence, upstream fixtures, PyTorch and/or POSIX runtime features. Setup/teardown errors mean these are the runner's reported event counts, not a simple subtraction of failed test cases. No private fixture was fabricated and no historical test was changed to manufacture a pass. This refresh did not rerun GPU training or live cloud workloads.
 
-## My contribution and retained history
+## My contribution and team authorship
 
-My authored work concentrated on the evaluation system, cloud execution workflow, emotion-annotation pipeline, data-release gates, and LoRA environment validation. The original private history attributes 35 commits to Tian Liao. After restricted paths were removed and empty commits were pruned, this public repository retains 29 source-relevant commits, including their original authorship, dates, messages, and development sequence. The public email is rewritten to the account's GitHub noreply address.
+My work centres on evaluation/data workflows, cloud execution, benchmark integration, environment validation, coordination and later checkpoint/evaluation adoption. The formal training implementation also contains teammates' authored contributions; the Git history retains their names and does not relabel them as mine.
 
-Selected evidence is summarised in [docs/CONTRIBUTIONS.md](docs/CONTRIBUTIONS.md). The filtering and provenance process is documented in [SOURCE_ORIGIN.md](SOURCE_ORIGIN.md), and the system flow in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
-## Skills demonstrated
-
-- Multimodal LLM evaluation and benchmark design
-- PEFT/LoRA integration and GPU runtime validation
-- Deterministic dataset construction and leakage prevention
-- Python CLI development and automated validation
-- Linux/RunPod execution, dependency pinning, and reproducibility
-- Git/GitHub pull-request collaboration, technical documentation, and team handoff
-
-## Attribution and release boundary
-
-This is a team-project portfolio, not a claim of sole ownership over the entire capstone. The retained code is team-authored derivative engineering built around upstream systems; it does not include or relicense Venus, Qwen-VL, AesGuide, EmoSet, or their assets. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [NOTICE.md](NOTICE.md).
-
+The latest filtered source lineage contains **44 retained commits, 40 attributed to Tian Liao**, including merges. Earlier public history remains intact; do not add both import lineages as a measure of unique contributions. See [contribution evidence](docs/CONTRIBUTIONS.md), [architecture](docs/ARCHITECTURE.md), [NOTICE.md](NOTICE.md) and [third-party attribution](THIRD_PARTY_NOTICES.md).

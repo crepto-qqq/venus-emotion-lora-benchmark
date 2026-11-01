@@ -1,24 +1,13 @@
 # Public source portfolio notice
 
-This repository is a sanitised source portfolio derived from work completed in a private six-person University of Sydney team project. The team members whose contributions may remain in the retained paths authorised this public portfolio release.
+This is an authorised public source portfolio derived from a six-person University of Sydney team project. Team members permitted publication of their retained team-authored work. Authorship remains with the original contributors; Tian Liao is not presented as sole author of the capstone.
 
-## Included
+Included are team-authored evaluation/data/training tools, tests, schemas, selected configuration, engineering runbooks and filtered history. Selected aggregate outcomes are summarised in the public README with their limitations.
 
-- team-authored Python and Shell engineering for evaluation, dataset validation, LoRA runtime preparation, and handoff verification;
-- tests, schemas, configuration files, runbooks, and reproducibility scripts needed to understand that engineering;
-- a filtered Git history preserving relevant authorship, dates, commit messages, and development order.
+Excluded from the imported lineage are bundled third-party source/patches, source images/annotations, private dataset releases, model weights/checkpoints, raw outputs, reviewer sheets and full answers, course administration, private meetings/process archives and binary reports/slides. Credentials and personal contact/machine-home values are removed or anonymised.
 
-## Excluded from the current tree and all reachable history
+Non-media sample identifiers and configuration metadata remain where needed to explain deterministic code and tests. They do not contain image pixels or a usable source-dataset release. Historical runbooks may refer to intentionally omitted private inputs; these references do not imply those inputs were published.
 
-- third-party Venus, AesGuide, and Qwen source code;
-- source images, annotation records, generated dataset releases/manifests, and evaluation outputs;
-- model weights, adapter checkpoints, reports, and experiment releases;
-- course administration material, group contracts, meeting records, and private team/client documents;
-- API keys, tokens, authentication credentials, private keys, billing/payment details, and personal or university email addresses.
+Names, dates, relevant messages and development order remain in the filtered history. Empty commits are pruned and hashes differ from the private source. The previous public history remains intact; see [SOURCE_ORIGIN.md](SOURCE_ORIGIN.md).
 
-History was rewritten only to remove excluded paths and replace private email addresses. Commits left empty by that filtering were pruned. The public history is therefore auditable but is not a byte-for-byte mirror of the private university repository.
-
-Non-media EmoSet selection identifiers and configuration metadata remain where needed to explain and test the team's deterministic pipeline. They do not include image pixels, source annotation records, or a usable dataset release.
-
-The code is visible for portfolio review. No open-source licence is granted by this repository unless a licence file is added later with the agreement of the relevant rights holders. Third-party names and technical terms are used only for attribution and to describe interoperability; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
-
+Publication does not grant a new open-source licence to team code or relicense upstream systems/data. Venus, AesGuide, Qwen and EmoSet retain their own ownership and terms. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

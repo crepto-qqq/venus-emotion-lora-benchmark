@@ -1,35 +1,42 @@
-.DS_Store
-Thumbs.db
-desktop.ini
-*.tmp
-
-# Python and local environments
+# Python
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.coverage
 .venv/
-venv/
 
-# Credentials and machine-local configuration
+# Local tooling and secrets
+.codex_work/
 .env
-.env.*
-!.env.example
-!*.env.example
 
-# Restricted datasets, generated evidence, and model artefacts
-/data/
-/results/
-/External/
-/phase3/releases/
-/phase3/reports/
-*.pt
-*.pth
-*.ckpt
+# Model weights and Hugging Face caches must never enter Git
+/models/
+/.huggingface/
 *.safetensors
+pytorch_model*.bin
+training_args.bin
+rng_state*.pth
 
-# Local IDE and notebook state
-.idea/
-.vscode/
-.ipynb_checkpoints/
+# EmoSet is non-redistributable project input. Keep it outside the repo.
+/private_data/
+/data/EmoSet*/
+/data/emoset*/
+/data/**/image/
+/data/**/images/
 
+# Rendered evaluation packs contain EmoSet pixels and stay private.
+/artifacts/
+/results/phase1/**/private/
+
+# Common local files
+.DS_Store
+Thumbs.db
+
+# Local generated work products
+/tmp/
+/output/
+
+# Local EmoSet / annotation artifacts
+data/EmoSet-118K.zip
+data/datasets/raw/
+data/datasets/anger_old_before_manual_review/
+.codex_work/

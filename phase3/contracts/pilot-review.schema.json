@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "decision": {},
+    "formal_config_sha256": {},
+    "formal_resource_limits": {},
+    "kind": {},
+    "matrix_sha256": {},
+    "pilot_evidence_sha256s": {},
+    "reviewer_role": {},
+    "schema_version": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "reviewer_role",
+    "decision",
+    "pilot_evidence_sha256s",
+    "formal_config_sha256",
+    "formal_resource_limits",
+    "matrix_sha256"
+  ],
+  "title": "Member 3B pilot review",
+  "type": "object"
+}

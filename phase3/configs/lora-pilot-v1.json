@@ -1,0 +1,100 @@
+{
+  "schema_version": 1,
+  "kind": "lora_pilot_config",
+  "owner": "Member 3A",
+  "creation_gate": "offline_design_then_runtime_inventory",
+  "inventory_state": "pending_runtime_inventory",
+  "runtime": {
+    "python": "/workspace/phase3/envs/venus-phase3/bin/python",
+    "working_directory": "/workspace/phase3/upstream/Qwen-VL-finetune",
+    "model_path": "/workspace/models/Venus-Q-Stage1",
+    "cache_dir": "/workspace/phase3/cache",
+    "expected_model_revision": "0f5c00c8d07ba889e9c5d12f828129dc322aae6a",
+    "expected_upstream_commit": "efa37ba284d56192b246d9b4ed5d3668c1abd163",
+    "expected_patch_sha256": "be9e14a60f4f2189a108aa1f46a7384616bfdd527ca6c0a41a4c175a92172eba"
+  },
+  "data": {
+    "dataset_id": "BridgeTrain-v1",
+    "train_repo_path": "phase3/releases/bridge-train-v1/bridge-train-v1.train.json",
+    "validation_repo_path": "phase3/releases/bridge-train-v1/bridge-train-v1.validation.json",
+    "train_path": "/workspace/phase3/member3/pilot-data/pilot-train.json",
+    "validation_path": "/workspace/phase3/member3/pilot-data/pilot-validation.json",
+    "release_hashes": {
+      "bridge-train-v1.train.json": "bc6c54aec636d0e56afad30ff5a004b48ccc9bcddbf76d0e91ab419b274df0d8",
+      "bridge-train-v1.validation.json": "eafadfc9b6724ad9075a56e521ede4eae0db3ad541b2797c83b4230f4ad8f98b",
+      "bridge-train-v1.manifest.jsonl": "441e7b7d69d57ca74387796b469a1a754d7ce69f0f24ee9230404910384b738b",
+      "bridge-train-v1.rejections.jsonl": "928c07335f11df6024d73c6a00bcefcda7c88dcdfdb308147cf7926beee168be",
+      "bridge-train-v1.summary.json": "600d0ba014721cdb4d4b39618a2fa6a24e1fef8e95136792c2c9256513ec2086"
+    }
+  },
+  "pilot_subset": {
+    "seed": "member3-lora-pilot-v1",
+    "train_per_class_task": {
+      "classification": 2,
+      "joint_guidance": 1
+    },
+    "validation_per_class_task": {
+      "classification": 10,
+      "joint_guidance": 2
+    }
+  },
+  "lora": {
+    "mode": "lora",
+    "rank": 8,
+    "alpha": 16,
+    "dropout": 0.05,
+    "bias": "none",
+    "target_modules": null,
+    "target_source": "pending_runtime_inventory",
+    "inventory_sha256": null,
+    "matched_module_count": null,
+    "modules_to_save": null,
+    "base_dtype": "bfloat16",
+    "input_dtype": "bfloat16",
+    "adapter_dtype": "float32"
+  },
+  "training": {
+    "optimizer": "adamw_torch",
+    "learning_rate": 0.0001,
+    "weight_decay": 0.0,
+    "micro_batch_size": 1,
+    "gradient_accumulation_steps": 8,
+    "gradient_checkpointing": true,
+    "max_grad_norm": 1.0,
+    "seed": 42,
+    "data_order": "seeded_shuffle",
+    "workers": 2,
+    "max_steps": 30,
+    "epochs": 1.0,
+    "scheduler": "cosine",
+    "warmup_ratio": 0.03,
+    "logging_steps": 1,
+    "evaluation_strategy": "external_bridge_validation",
+    "evaluation_interval_steps": 10,
+    "save_strategy": "steps",
+    "save_steps": 10,
+    "save_total_limit": 4,
+    "resume_policy": "explicit_checkpoint_only",
+    "mixed_precision": "bf16",
+    "distributed_policy": "single_gpu",
+    "deepspeed": null,
+    "tokenizer_policy": "pinned_model_tokenizer_no_new_tokens",
+    "max_sequence_length": 2048,
+    "fix_vit": true,
+    "report_to": "tensorboard",
+    "stop_rules": {
+      "nonfinite_loss": "stop",
+      "zero_supervised_tokens": "stop",
+      "unexpected_trainable_parameter": "stop",
+      "identity_hash_change": "stop",
+      "time_limit": "stop",
+      "cost_limit": "stop",
+      "oom": "stop_and_follow_resource_limits"
+    }
+  },
+  "output": {
+    "run_dir": "/workspace/phase3/member3/pilot/{candidate_id}/{attempt_id}",
+    "git_safe_evidence_dir": "phase3/reports/member3/pilot"
+  },
+  "resource_limits": null
+}

@@ -18,6 +18,7 @@ from .core import (
     validate_human_reviews,
     validate_selection_manifest,
 )
+from .inference import _condition_prompt, _expected_adapter_identity, _verify_adapter_files
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -38,6 +39,10 @@ def validate_run(
     inference_manifest: dict,
     config: dict,
     condition: str,
+    *,
+    adapter_evidence_path: Path | None = None,
+    b1_run_config_path: Path | None = None,
+    adapter_path: Path | None = None,
 ) -> dict:
     errors: list[str] = []
     records_path = run_dir / "records.jsonl"
@@ -94,10 +99,11 @@ def validate_run(
             errors.append(f"{blind_id}: response SHA-256 mismatch.")
 
     condition_config = config["conditions"][condition]
+    expected_prompt = _condition_prompt(config, condition)
     expected_run_config = {
         "condition": condition,
         "prompt_version": condition_config["prompt_version"],
-        "prompt": condition_config["prompt"],
+        "prompt": expected_prompt,
         "seed": config["seed"],
         "precision": config["precision"],
         "batch_size": config["batch_size"],
@@ -117,7 +123,108 @@ def validate_run(
     if summary.get("records_sha256") != sha256_file(records_path):
         errors.append("summary records_sha256 differs from records.jsonl.")
 
-    return {
+    if condition == "C":
+        if "adapter_path" in run_config:
+            errors.append("C run_config must not reveal the private adapter path.")
+        project_root = Path(__file__).resolve().parents[2]
+        lock_path = project_root / "phase3/configs/source-lock.json"
+        try:
+            source_lock = json.loads(lock_path.read_text(encoding="utf-8"))["model"]
+            snapshot_path = project_root / source_lock["snapshot_manifest"]
+            snapshot = json.loads(snapshot_path.read_text(encoding="utf-8"))
+            expected_snapshot_receipt = {
+                "source_lock_sha256": sha256_file(lock_path),
+                "snapshot_manifest_sha256": sha256_file(snapshot_path),
+                "verified_file_count": snapshot["file_count"],
+                "verified_total_bytes": snapshot["total_bytes"],
+            }
+            if (expected_snapshot_receipt["snapshot_manifest_sha256"]
+                    != source_lock["snapshot_manifest_sha256"]):
+                errors.append("C source lock does not match model snapshot manifest.")
+            if run_config.get("base_snapshot_verification") != expected_snapshot_receipt:
+                errors.append("C base snapshot verification receipt differs from pinned source lock.")
+        except (OSError, ValueError, KeyError, TypeError) as error:
+            errors.append(f"C pinned base snapshot metadata invalid: {error}")
+        if adapter_evidence_path is None or b1_run_config_path is None:
+            errors.append("C validation requires adapter evidence and the B1 run_config.")
+        else:
+            try:
+                expected_identity = _expected_adapter_identity(
+                    adapter_evidence_path, config["model"]
+                )
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                errors.append(f"C adapter evidence invalid: {error}")
+            else:
+                recorded_identity = run_config.get("adapter_identity")
+                if not isinstance(recorded_identity, dict):
+                    errors.append("C run_config is missing adapter identity.")
+                else:
+                    for key in (
+                        "evidence_sha256", "selected_checkpoint", "formal_config_sha256",
+                        "base_revision", "adapter_files", "acceptance_status",
+                    ):
+                        if recorded_identity.get(key) != expected_identity[key]:
+                            errors.append(f"C adapter identity {key} differs from training evidence.")
+                if adapter_path is not None:
+                    try:
+                        _verify_adapter_files(adapter_path, expected_identity)
+                    except (OSError, ValueError) as error:
+                        errors.append(f"C adapter rehash failed: {error}")
+            try:
+                b1_run_config = json.loads(b1_run_config_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError) as error:
+                errors.append(f"B1 run_config cannot be read: {error}")
+            else:
+                if b1_run_config.get("condition") != "B1":
+                    errors.append("B1 reference run_config has the wrong condition.")
+                for key in (
+                    "prompt", "prompt_version", "seed", "precision", "batch_size",
+                    "manifest_size", "generation_expected", "generation_actual",
+                    "model_loading",
+                ):
+                    if run_config.get(key) != b1_run_config.get(key):
+                        errors.append(f"C/B1 {key} differs.")
+                for key in ("config", "scoring_handbook", "inference_manifest", "freeze_record"):
+                    if (run_config.get("file_sha256", {}).get(key)
+                            != b1_run_config.get("file_sha256", {}).get(key)):
+                        errors.append(f"C/B1 {key} SHA-256 differs.")
+                for key in ("repo_id", "revision", "weight_format"):
+                    if (run_config.get("model_source", {}).get(key)
+                            != b1_run_config.get("model_source", {}).get(key)):
+                        errors.append(f"C/B1 base model {key} differs.")
+        if run_config.get("prompt_source_condition") != "B1":
+            errors.append("C run_config must name B1 as its prompt source.")
+        if (run_config.get("rng_seed_position") != "before_shared_base_load"
+                or run_config.get("adapter_load_rng_restored") is not True
+                or run_config.get("adapter_load_rng_scope")
+                != "cpu_and_all_visible_cuda_devices"):
+            errors.append("C run_config does not verify adapter-load RNG restoration.")
+        if run_config.get("generation_expected") != config["generation"]:
+            errors.append("C generation settings differ from frozen Eval80 config.")
+        for key, expected in config["generation"].items():
+            if run_config.get("generation_actual", {}).get(key) != expected:
+                errors.append(f"C actual generation {key} differs from frozen Eval80 config.")
+        if run_config.get("model_loading") != config["model_loading"]:
+            errors.append("C model-loading policy differs from frozen Eval80 config.")
+        for key in ("repo_id", "revision", "weight_format"):
+            if run_config.get("model_source", {}).get(key) != config["model"][key]:
+                errors.append(f"C base model {key} differs from frozen Eval80 config.")
+        devices = run_config.get("parameter_devices")
+        if not isinstance(devices, list) or not devices or any(
+            not isinstance(device, str) or not device.startswith("cuda") for device in devices
+        ):
+            errors.append("C run_config does not verify CUDA-only model placement.")
+        for index, (record, expected) in enumerate(
+            zip(records, inference_manifest["records"]), start=1
+        ):
+            if record.get("sequence_index") != index or record.get("blind_id") != expected["blind_id"]:
+                errors.append(f"C record {index} differs from frozen manifest order.")
+            if record.get("prompt_version") != condition_config["prompt_version"]:
+                errors.append(f"C record {index} prompt version differs from B1.")
+        if summary.get("condition") != "C":
+            errors.append("C summary condition mismatch.")
+
+    report = {
         "schema_version": 1,
         "valid": not errors,
         "condition": condition,
@@ -128,6 +235,10 @@ def validate_run(
         "records_sha256": sha256_file(records_path),
         "errors": errors,
     }
+    if condition == "C":
+        report["validation_scope"] = "technical_only"
+        report["training_acceptance_verified"] = False
+    return report
 
 
 def validate_output_command(argv: list[str] | None = None) -> int:
@@ -135,13 +246,21 @@ def validate_output_command(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--manifest", type=Path, required=True)
     parser.add_argument("--config", type=Path, required=True)
-    parser.add_argument("--condition", choices=("A", "B0", "B1"), required=True)
+    parser.add_argument("--condition", choices=("A", "B0", "B1", "C"), required=True)
+    parser.add_argument("--adapter-evidence", type=Path)
+    parser.add_argument("--adapter-path", type=Path)
+    parser.add_argument("--b1-run-config", type=Path)
     parser.add_argument("--report", type=Path)
     args = parser.parse_args(argv)
 
     manifest = json.loads(args.manifest.read_text(encoding="utf-8"))
     config = json.loads(args.config.read_text(encoding="utf-8"))
-    report = validate_run(args.run_dir, manifest, config, args.condition)
+    report = validate_run(
+        args.run_dir, manifest, config, args.condition,
+        adapter_evidence_path=args.adapter_evidence,
+        b1_run_config_path=args.b1_run_config,
+        adapter_path=args.adapter_path,
+    )
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(
@@ -242,8 +361,9 @@ def freeze_command(argv: list[str] | None = None) -> int:
     if "TODO" in handbook_text or "- [ ]" in handbook_text:
         raise RuntimeError("The scoring handbook still contains TODO fields or unchecked items.")
     reading_copy_text = args.reading_copy.read_text(encoding="utf-8")
-    if "状态：已冻结" not in reading_copy_text.splitlines():
-        raise RuntimeError("The Chinese scoring handbook must contain the line '状态：已冻结'.")
+    chinese_frozen_status = "\u72b6\u6001\uff1a\u5df2\u51bb\u7ed3"
+    if chinese_frozen_status not in reading_copy_text.splitlines():
+        raise RuntimeError("The Chinese scoring handbook is missing its required frozen-status line.")
 
     selection = read_selection_manifest(args.selection_manifest)
     errors = validate_selection_manifest(selection, args.image_dir, verify_hashes=True)

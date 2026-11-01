@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "allowed_argument_names": {},
+    "config_to_cli": {},
+    "entry_point": {},
+    "frozen_defaults": {},
+    "kind": {},
+    "parser_inventory": {},
+    "reviewed_patch_sha256": {},
+    "schema_version": {},
+    "source_commit": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "source_commit",
+    "reviewed_patch_sha256",
+    "entry_point",
+    "parser_inventory",
+    "allowed_argument_names",
+    "frozen_defaults",
+    "config_to_cli"
+  ],
+  "title": "Pinned Qwen training interface",
+  "type": "object"
+}

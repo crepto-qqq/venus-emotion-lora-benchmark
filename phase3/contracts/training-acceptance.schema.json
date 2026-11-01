@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "adapter_sha256": {},
+    "decision": {},
+    "formal_config_sha256": {},
+    "kind": {},
+    "reload_passed": {},
+    "reviewer_role": {},
+    "schema_version": {},
+    "selected_checkpoint": {},
+    "selection_basis": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "reviewer_role",
+    "decision",
+    "formal_config_sha256",
+    "selected_checkpoint",
+    "adapter_sha256",
+    "reload_passed",
+    "selection_basis"
+  ],
+  "title": "Member 3B training acceptance",
+  "type": "object"
+}

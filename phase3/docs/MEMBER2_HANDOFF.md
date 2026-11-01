@@ -7,9 +7,7 @@ the reviewed EmoSet records and the pinned Qwen-VL fine-tuning loader. The
 release contains 480 unique images represented by 576 conversations: 480
 label-only classification samples and 96 structured joint-guidance samples.
 
-In the private project, the Git-safe release was stored in
-`phase3/releases/bridge-train-v1/`. That derived release is intentionally not
-distributed in this public portfolio. It contained:
+The Git-safe release is in `phase3/releases/bridge-train-v1/`:
 
 - `bridge-train-v1.train.json`: 480 Qwen-VL conversations;
 - `bridge-train-v1.validation.json`: 96 Qwen-VL conversations;
@@ -28,10 +26,8 @@ of the private image tree is a separate runtime preflight.
 
 ## Rebuild and verify
 
-The following commands document the private rebuild procedure. They require
-the separately authorised EmoSet archive, private annotation records, frozen
-evaluation material, and release artefacts; they are not a public quick start.
-Set `ARCHIVE` to the authorised local `EmoSet-118K.zip` path.
+Run these commands from the repository root. Set `ARCHIVE` to the local
+`EmoSet-118K.zip` path.
 
 ```bash
 python -m src.datasets.bridge_train \
@@ -106,7 +102,8 @@ The separate cumulative ceiling for all Phase 3 non-training costs is USD 20;
 it includes the existing H100 smoke, retained-volume charges, and future
 non-training work.
 
-The private project also used `Docs/phase3/MEMBER3_START_HERE_EN.md` and
-`Docs/phase3/PHASE3_LORA_WORKFLOW_EN.docx` as its canonical Member 3 workflow
-documents. Those assessment/project documents are intentionally not
-distributed in this public portfolio.
+The exact completion record and repository-only starting procedure for Member
+3 are in the canonical English project documents:
+
+- [`MEMBER3_START_HERE_EN.md`](../../Docs/phase3/MEMBER3_START_HERE_EN.md)
+- [`PHASE3_LORA_WORKFLOW_EN.docx`](../../Docs/phase3/PHASE3_LORA_WORKFLOW_EN.docx)

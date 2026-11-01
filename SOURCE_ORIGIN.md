@@ -1,47 +1,45 @@
-# Source origin and history filtering
+# Source provenance and refresh status
 
-## Original repository
+Refreshed on 2 November 2026 from the committed school repository without altering its working tree.
 
-This portfolio was derived from the private University of Sydney GitHub Enterprise repository for SOFT3888 team `TU12_01_P15`.
+| Item | Recorded value |
+|---|---|
+| Original repository | [SOFT3888 team repository](https://github.sydney.edu.au/tsin0599/SOFT3888_TU12_01_P15) |
+| Source branch | `main` |
+| Source commit | `f1b6bcaa66e6da7cfccfc429051e6bcf873f87d2` |
+| Original reachable commits | 84 |
+| Retained source-history commits | 44 |
+| Tian-authored retained commits | 40, including merges |
+| Retained files | 177 |
+| Filtered source tip | `3cd4b65236fee72627b08e9fa8be605499893b02` |
 
-The filtered import used the team's remote-tracking `origin/main` snapshot at original private commit `f23cd02`. At the time of export, that snapshot contained 61 commits, 695 tracked files, and approximately 224.1 MB of repository content.
+The earlier public snapshot came from `f23cd02`. Its publication commits and filtered history remain intact. This refresh merges a newly reviewed filtered lineage without force-rewriting the public branch. Counts above refer to the new source import, not both overlapping lineages combined.
 
-## Public source history
+Some later upstream commits contain only excluded demonstration/report/review artefacts and become empty after filtering. Consequently, the filtered tip can have an earlier date than the full source snapshot. The root README summarises the final source records without republishing private ratings, images or complete model answers.
 
-The source-history branch in this repository contains:
+## Retained material
 
-- 29 retained commits attributable to Tian Liao;
-- 97 retained files at the filtered source snapshot;
-- approximately 0.66 MB of retained source and documentation;
-- original author name, author date, commit date, message, and parent ordering for every non-empty retained commit.
+- Team Python source, tests and scripts under `src/`, `tests/`, `scripts/` and `phase3/`.
+- Schemas, selected configuration, environment definitions and engineering runbooks.
+- Project context and roadmap, retained as upstream development records.
+- Original author names, dates, relevant messages and retained commit ordering.
 
-Tian's original university email was rewritten to `crepto-qqq@users.noreply.github.com`. Personal, university, and local-host email addresses were removed. Because filtering changes commit contents and parent graphs, all public commit hashes differ from their private originals.
+## Material excluded from the imported history
 
-## Retained path groups
+- `External/` and bundled Venus/Qwen/other third-party source or patch bundles.
+- Image/annotation corpora, generated dataset releases, model/adapter weights and checkpoints.
+- Raw inference outputs, private manifests, review sheets, full answers and reviewer assignments.
+- Course administration, contracts, meetings, binary final reports/slides and process-record archives.
+- Credentials, private contact addresses and personal machine-home paths.
 
-- `src/**/*.py`
-- `tests/**/*.py`
-- `scripts/**/*.sh` and related runbook documentation
-- `configs/**/*.json`
-- `environment/**`
-- `phase3/tools/**/*.py`
-- `phase3/tests/**/*.py`
-- `phase3/scripts/**/*.sh`
-- `phase3/contracts/**/*.json`
-- selected `phase3/configs/**`, `phase3/environment/**`, and handoff/runbook Markdown
-- project context and roadmap documentation needed to interpret the retained work
+Private emails are replaced consistently; Tian's source author email maps to `crepto-qqq@users.noreply.github.com`, other author/committer emails to an anonymous address. Source names and timestamps are retained. Hashes change because path filtering/redaction changes commit contents. Empty commits are pruned.
 
-## Removed from every retained commit
+The retained source history was checked for common API-token/private-key formats and non-test private email addresses. This precaution is not a formal security certification.
 
-- `External/**` and every bundled upstream/third-party source tree;
-- `data/**`, `results/**`, Phase 3 releases, reports, and Word exports;
-- image datasets, annotations, generated outputs, hashes tied to private releases, and model/checkpoint files;
-- group contracts, meeting notes, client or course administration records, and unrelated assessment artefacts;
-- upstream patch bundles and any file that could redistribute third-party code;
-- Git references and commits that became empty after the removals.
+## Completed project evidence
 
-The raw private `.git` directory was never copied into this public repository. A path-filtered branch was created, scanned, and merged into the pre-existing portfolio documentation so the public repository retains a transparent two-parent import point without exposing excluded objects.
+The private snapshot records formal 180-step training, checkpoint-180 acceptance on 19 October, Stage C inference and six-reviewer guidance results on 28 October. The root README separates these project outcomes from the tests executed during this source refresh, and records the evaluation limitations.
 
-## Authorship and permission boundary
+## Future synchronisation
 
-This filtering preserves evidence of Tian's source contributions while keeping the six-person team context explicit. Team permission covers publication of the retained team-authored paths. It does not grant ownership of, or a licence to redistribute, any upstream system or dataset. See [NOTICE.md](NOTICE.md) and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+This is a manual reviewed snapshot, not an automatic mirror or synchronising fork. The school repository link and exact source commit provide traceability. Future refreshes must fetch committed source, repeat filtering and checks, and merge the public export without force-pushing or publishing raw private refs. Local uncommitted work must be handled separately and is not included implicitly.

@@ -1,0 +1,12 @@
+# Preserve the original bytes of committed Phase 2 result artifacts.
+/results/phase2/**/*.json -text
+/results/phase2/**/*.jsonl -text
+/results/phase2/eval80/frozen_inputs/inference_manifest.json whitespace=cr-at-eol
+
+# Keep published Eval80 benchmark artifacts byte-identical to their recorded SHA-256 values.
+/Docs/evaluation/supporting/results/EVAL80_FINAL_AUTOMATED_BENCHMARK_2026-10-18.json -text whitespace=cr-at-eol
+/Docs/evaluation/EVAL80_FINAL_AUTOMATED_BENCHMARK_2026-10-18.md -text
+/Docs/evaluation/supporting/results/EVAL80_FINAL_GUIDANCE_PREFERENCE_2026-10-18.json -text
+/Docs/evaluation/supporting/protocols/EVAL80_SCORING_HANDBOOK.md -text
+/Docs/evaluation/supporting/protocols/EVAL80_FREEZE_RECORD.json -text
+/Docs/evaluation/supporting/protocols/EVAL80_DISPLAY_EXCLUSION.json -text

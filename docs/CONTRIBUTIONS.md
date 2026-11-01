@@ -1,33 +1,24 @@
 # Contribution evidence
 
-The original private team repository attributes **35 commits** to Tian Liao (portfolio account: `@crepto-qqq`; University of Sydney identity: `tlia0262`). After removing restricted and third-party paths, 29 source-relevant commits remain in this public history. Every retained source-history commit is attributed to Tian.
+The latest filtered source lineage contains 44 source-relevant commits, including 40 attributed to Tian Liao. The count includes merges, excludes empty commits after filtering and is not an ownership percentage. The previous public import is retained for continuity, not added to this count as unique new work.
 
-Commit hashes changed because Git history was filtered. The identifiers below are the new, directly inspectable public hashes.
-
-## Selected retained commits
+## Inspectable public examples
 
 | Public commit | Date | Contribution |
 |---|---|---|
-| `d5725fc` | 2026-08-25 | Migrated and clarified the project context and roadmap |
-| `7640926` | 2026-08-25 | Defined the evaluation process, scoring rules, compute strategy, and resource plan |
-| `cf84dad` | 2026-08-25 | Refined the GPU execution strategy |
-| `25e210d` | 2026-09-01 | Implemented the emotion-aware protocol and Eval20 baseline workflow |
-| `99a1fc0` | 2026-09-06 | Extended the annotation pipeline for awe, sadness, and contentment and documented API-assisted collection |
-| `573f2ad` | 2026-09-07 | Organised the frozen Eval80 evaluation workflow |
-| `114ea2b` | 2026-09-09 | Added the Eval80 RunPod execution scripts |
-| `6e5af32` | 2026-09-24 | Added the Phase 3 LoRA environment and compatibility handoff |
-| `9c1f1aa` | 2026-09-25 | Hardened the environment handoff acceptance checks |
-| `016826b` | 2026-09-25 | Updated RunPod team-provisioning status and instructions |
-| `74ed57e` | 2026-09-26 | Finalised the Phase 3 LoRA environment handoff |
-| `05197c4` | 2026-09-26 | Completed the Phase 3 training-data handoff source and contracts |
+| `6ae24c7` | 26 September 2026 | Phase 3 training-data handoff and contracts |
+| `2dd7907` | 17 October 2026 | Deterministic Eval80 output benchmark |
+| `1cacd9f` | 18 October 2026 | Stage C and image-aware benchmark tooling |
+| `94d5896` | 18 October 2026 | Reviewed automated benchmark publication |
+| `5e31a94` | 18 October 2026 | Single-entry evaluation reporting |
+| `cd7e3b0` | 19 October 2026 | Checkpoint acceptance and saved Stage C adoption |
 
-## Contribution boundary
+Earlier retained history records baseline/evaluation, annotation processing, data construction and LoRA environment work. Tian's source author emails map to the public account's noreply address; other author emails are anonymised. Source commit hashes differ after filtering.
 
-The repository preserves Tian's code history and leadership evidence without claiming sole ownership of the six-person project. In particular, it does not claim:
+## Team boundary
 
-- authorship of the upstream Venus, AesGuide, Qwen, or dataset assets;
-- completion of formal LoRA optimiser training or production of an adapter checkpoint;
-- ownership of teammates' work merely because it formed part of the same capstone.
+Formal training is a team result. The retained history includes `ecf3cdf`, attributed to Jackie(Qinchun) Zhang, for the LoRA training workflow and `bbe0f09`, attributed to 张致远, for runtime/formal training handoff. Their work is not relabelled as Tian's implementation.
 
-The retained history is the evidence for individual implementation. Project-level results are described as team outcomes unless a specific Tian-authored commit supports a narrower claim.
+Tian's work includes evaluation/data pipelines, cloud execution, environment validation, coordination and later benchmark/checkpoint integration. The final six-reviewer scores are team outcomes. The checkpoint acceptance was recorded by Tian after assuming the review role, not fabricated as another teammate's independent signature.
 
+Upstream Venus/Qwen implementations, datasets and model assets are not team-authored work. See [source provenance](../SOURCE_ORIGIN.md).

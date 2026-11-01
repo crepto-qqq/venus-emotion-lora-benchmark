@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": true,
+  "properties": {
+    "allowed_override_fields": {},
+    "candidates": {
+      "maxItems": 3,
+      "minItems": 1,
+      "type": "array"
+    },
+    "kind": {},
+    "schema_version": {},
+    "selection_rule": {}
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "allowed_override_fields",
+    "selection_rule",
+    "candidates"
+  ],
+  "title": "Member 3 LoRA experiment matrix",
+  "type": "object"
+}
